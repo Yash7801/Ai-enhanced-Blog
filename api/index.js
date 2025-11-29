@@ -1,48 +1,56 @@
 import express from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import multer from 'multer';
 import suggestionRouter from './routes/suggestion.js';
-import cors from 'cors'; 
 import postsRouter from './routes/posts.js';
 import userRouter from './routes/users.js';
 import authRouter from './routes/auth.js';
-import cookieParser from 'cookie-parser';
-import multer from 'multer';
 
 const app = express();
 
-// CORS
-app.use(cors({
-  origin: "http://localhost:5173",
-  credentials: true,
-}));
+/* ✅ FIXED CORS */
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "https://axelblaze.vercel.app"   // for later when you deploy frontend
+];
 
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      console.log("❌ BLOCKED ORIGIN:", origin);
+      return callback(new Error("CORS blocked"));
+    },
+    credentials: true,
+  })
+);
+
+/* Required to process JSON + cookies */
 app.use(express.json());
 app.use(cookieParser());
-
-// Serve uploads
 app.use("/upload", express.static("uploads"));
 
-// Multer
+/* File Upload */
 const storage = multer.diskStorage({
-  destination: function(req, file, cb) {
-    cb(null, 'uploads');
-  },
-  filename: function(req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
+  destination: (req, file, cb) => cb(null, "uploads"),
+  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
 });
-
 const upload = multer({ storage });
 
-app.post('/api/upload', upload.single('file'), (req, res) => {
+app.post("/api/upload", upload.single("file"), (req, res) => {
   res.status(200).json(req.file.filename);
 });
 
-// Routes
+/* Routes */
 app.use("/api/suggest", suggestionRouter);
-app.use('/api/posts', postsRouter);
-app.use('/api/users', userRouter);
-app.use('/api/auth', authRouter);
+app.use("/api/posts", postsRouter);
+app.use("/api/users", userRouter);
+app.use("/api/auth", authRouter);
 
-// Server
+/* Server */
 const PORT = process.env.PORT || 5200;
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
