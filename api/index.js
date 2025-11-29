@@ -1,6 +1,6 @@
 import express from 'express';
 import suggestionRouter from './routes/suggestion.js';
-import cors from 'cors';
+import cors from 'cors'; 
 import postsRouter from './routes/posts.js';
 import userRouter from './routes/users.js';
 import authRouter from './routes/auth.js';
@@ -15,39 +15,34 @@ app.use(cors({
   credentials: true,
 }));
 
-app.options("*", cors());
-
-// Middleware
 app.use(express.json());
 app.use(cookieParser());
 
-// Serve static uploads
+// Serve uploads
 app.use("/upload", express.static("uploads"));
 
-// Multer storage
+// Multer
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads'); // FIXED path
+  destination: function(req, file, cb) {
+    cb(null, 'uploads');
   },
-  filename: function (req, file, cb) {
+  filename: function(req, file, cb) {
     cb(null, Date.now() + '-' + file.originalname);
   }
 });
 
 const upload = multer({ storage });
 
-// Routes
 app.post('/api/upload', upload.single('file'), (req, res) => {
-  const file = req.file;
-  res.status(200).json(file.filename);
+  res.status(200).json(req.file.filename);
 });
 
+// Routes
 app.use("/api/suggest", suggestionRouter);
 app.use('/api/posts', postsRouter);
 app.use('/api/users', userRouter);
 app.use('/api/auth', authRouter);
 
+// Server
 const PORT = process.env.PORT || 5200;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on ${PORT}`));
