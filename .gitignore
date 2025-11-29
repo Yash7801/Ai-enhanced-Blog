@@ -1,0 +1,39 @@
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+
+# Backend
+api/node_modules
+api/.env
+api/upload
+
+# Frontend
+client/node_modules
+client/Blog-back/node_modules
+client/Blog-back/dist
+client/Blog-back/.env
+client/Blog-back/upload
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Build caches
+.vite
+.cache
+.tmp
+
+# Misc
+.env.local
+.env.production
