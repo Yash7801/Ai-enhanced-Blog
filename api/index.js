@@ -10,37 +10,19 @@ import authRouter from "./routes/auth.js";
 
 const app = express();
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-  "https://axelblaze.vercel.app"
-];
-
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin);
-  }
-
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-
-  next();
-});
-
+// SIMPLE UNIVERSAL CORS (works on Render!)
+app.use(cors({
+  origin: true,          // automatically returns requesting origin
+  credentials: true
+}));
 
 app.use(express.json());
 app.use(cookieParser());
 
-// Make sure uploads folder exists
+// Serve uploads
 app.use("/upload", express.static("uploads"));
 
-// Multer
+// File upload
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads"),
   filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
