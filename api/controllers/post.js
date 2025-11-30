@@ -1,47 +1,54 @@
 import { db } from "../db.js";
 import jwt from "jsonwebtoken";
 
-export const getPosts = (req, res) => {
-  const q = req.query.cat
-    ? "SELECT * FROM posts WHERE cat=?"
-    : "SELECT * FROM posts";
-  const params = req.query.cat ? [req.query.cat] : [];
+// GET ALL POSTS
+export const getPosts = async (req, res) => {
+  try {
+    const q = req.query.cat
+      ? "SELECT * FROM posts WHERE cat=?"
+      : "SELECT * FROM posts";
 
-  db.query(q, params, (err, data) => {
-    if (err) {
-      console.log("GET POSTS DB ERROR:", err);
-      return res.status(500).json(err);
-    }
-    return res.status(200).json(data);
-  });
+    const params = req.query.cat ? [req.query.cat] : [];
+
+    const [rows] = await db.query(q, params);
+
+    return res.status(200).json(rows);
+  } catch (err) {
+    console.log("GET POSTS ERROR:", err);
+    return res.status(500).json(err);
+  }
 };
 
-export const getPost = (req, res) => {
-  const q = `
-    SELECT p.id, u.username, p.title, p.description, p.img, p.cat, p.date
-    FROM users u
-    JOIN posts p ON u.id = p.uid
-    WHERE p.id = ?
-  `;
+// GET SINGLE POST
+export const getPost = async (req, res) => {
+  try {
+    const q = `
+      SELECT p.id, u.username, p.title, p.description, p.img, p.cat, p.date
+      FROM users u
+      JOIN posts p ON u.id = p.uid
+      WHERE p.id = ?
+    `;
 
-  db.query(q, [req.params.id], (err, data) => {
-    if (err) {
-      console.log("GET POST DB ERROR:", err);
-      return res.status(500).json(err);
-    }
+    const [data] = await db.query(q, [req.params.id]);
+
     return res.status(200).json(data[0]);
-  });
+  } catch (err) {
+    console.log("GET POST ERROR:", err);
+    return res.status(500).json(err);
+  }
 };
 
-export const addPost = (req, res) => {
-  const token = req.cookies.access_token;
-  if (!token) return res.status(401).json("Not authenticated");
+// ADD POST
+export const addPost = async (req, res) => {
+  try {
+    const token = req.cookies.access_token;
+    if (!token) return res.status(401).json("Not authenticated");
 
-  jwt.verify(token, "jwtkey", (err, userInfo) => {
-    if (err) return res.status(403).json("Token is not valid");
+    const userInfo = jwt.verify(token, "jwtkey");
 
     const q =
       "INSERT INTO posts(`title`, `description`, `img`, `cat`, `uid`) VALUES (?)";
+
     const values = [
       req.body.title,
       req.body.description,
@@ -50,42 +57,42 @@ export const addPost = (req, res) => {
       userInfo.id,
     ];
 
-    db.query(q, [values], (err, data) => {
-      if (err) {
-        console.log("ADD POST DB ERROR:", err);
-        return res.status(500).json(err);
-      }
-      return res.status(200).json("Post has been created.");
-    });
-  });
+    await db.query(q, [values]);
+
+    return res.status(200).json("Post has been created.");
+  } catch (err) {
+    console.log("ADD POST ERROR:", err);
+    return res.status(500).json(err);
+  }
 };
 
-export const deletePost = (req, res) => {
-  const token = req.cookies.access_token;
-  if (!token) return res.status(401).json("Not authenticated");
+// DELETE POST
+export const deletePost = async (req, res) => {
+  try {
+    const token = req.cookies.access_token;
+    if (!token) return res.status(401).json("Not authenticated");
 
-  jwt.verify(token, "jwtkey", (err, userInfo) => {
-    if (err) return res.status(403).json("Token is not valid");
+    const userInfo = jwt.verify(token, "jwtkey");
+    const postId = req.params.id;
 
-    const posId = req.params.id;
     const q = "DELETE FROM posts WHERE `id`=? AND `uid`=?";
 
-    db.query(q, [posId, userInfo.id], (err, data) => {
-      if (err) {
-        console.log("DELETE POST DB ERROR:", err);
-        return res.status(500).json("It doesn't belong to you");
-      }
-      return res.json("Post has been deleted..!");
-    });
-  });
+    await db.query(q, [postId, userInfo.id]);
+
+    return res.json("Post has been deleted!");
+  } catch (err) {
+    console.log("DELETE POST ERROR:", err);
+    return res.status(500).json(err);
+  }
 };
 
-export const updatePost = (req, res) => {
-  const token = req.cookies.access_token;
-  if (!token) return res.status(401).json("Not authenticated");
+// UPDATE POST
+export const updatePost = async (req, res) => {
+  try {
+    const token = req.cookies.access_token;
+    if (!token) return res.status(401).json("Not authenticated");
 
-  jwt.verify(token, "jwtkey", (err, userInfo) => {
-    if (err) return res.status(403).json("Token is not valid");
+    const userInfo = jwt.verify(token, "jwtkey");
     const postId = req.params.id;
 
     const q =
@@ -95,14 +102,15 @@ export const updatePost = (req, res) => {
       req.body.description,
       req.body.img,
       req.body.cat,
+      postId,
+      userInfo.id,
     ];
 
-    db.query(q, [...values, postId, userInfo.id], (err, data) => {
-      if (err) {
-        console.log("UPDATE POST DB ERROR:", err);
-        return res.status(500).json(err);
-      }
-      return res.status(200).json("Post has been updated.");
-    });
-  });
+    await db.query(q, values);
+
+    return res.status(200).json("Post has been updated.");
+  } catch (err) {
+    console.log("UPDATE POST ERROR:", err);
+    return res.status(500).json(err);
+  }
 };
