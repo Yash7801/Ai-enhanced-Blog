@@ -16,7 +16,7 @@ client/node_modules
 client/Blog-back/node_modules
 client/Blog-back/dist
 client/Blog-back/.env
-client/Blog-back/upload
+
 
 # System files
 .DS_Store
