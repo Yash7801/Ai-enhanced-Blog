@@ -54,7 +54,7 @@ const Context = () => {
       const formData = new FormData();
       formData.append("file", file);
       const res = await axiosInstance.post("/api/upload", formData);
-      return res.data;
+      return res.data.url;
     } catch (err) {
       console.log(err);
     }

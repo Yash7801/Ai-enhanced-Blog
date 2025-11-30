@@ -28,10 +28,7 @@ const Home = () => {
             {/* IMAGE FIX */}
             <div className="img">
               {post.img ? (
-                <img 
-                  src={`${import.meta.env.VITE_API_URL}/upload/${post.img}`} 
-                  alt={post.title} 
-                />
+                <img src={post.img} alt={post.title}/>
               ) : (
                 <img 
                   src="https://placehold.co/600x400?text=No+Image" 

@@ -48,7 +48,7 @@ const Single = () => {
     <div className="single">
       <div className="content">
         {post.img && (
-          <img src={`${import.meta.env.VITE_API_URL}/upload/${post.img}`} />
+          <img src={post.img} alt={post.title}/>
         )}
 
         <div className="user">
