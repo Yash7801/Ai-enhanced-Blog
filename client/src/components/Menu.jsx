@@ -26,7 +26,7 @@ export const Menu = ({ cat, currentPostId }) => {
 
       {filteredPosts.map((post) => (
         <div className='post' key={post.id}>
-          <img src={`https://axelblaze-api.onrender.com/upload/${image}`}/>
+          <img src={`https://axelblaze-api.onrender.com/upload/${post.img}`}/>
 
           <h2>{post.title}</h2>
 
