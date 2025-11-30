@@ -40,5 +40,7 @@ app.use("/api/posts", postsRouter);
 app.use("/api/users", userRouter);
 app.use("/api/auth", authRouter);
 
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log("Server running on port", process.env.PORT));
+app.listen(process.env.PORT, () => {
+  console.log("Server running on port", process.env.PORT);
+});
+
