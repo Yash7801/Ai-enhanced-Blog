@@ -26,7 +26,8 @@ const Home = () => {
           <div className="post" key={post.id}>
             
             <div className="img">
-              <img src={`https://axelblaze-api.onrender.com/upload/${post.img}`}/>
+              <img src={`${import.meta.env.VITE_API_URL}/upload/${post.img}`} />
+
             </div>
 
             <div className="content">

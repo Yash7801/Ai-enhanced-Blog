@@ -26,8 +26,7 @@ export const Menu = ({ cat, currentPostId }) => {
 
       {filteredPosts.map((post) => (
         <div className='post' key={post.id}>
-          <img src={`https://axelblaze-api.onrender.com/upload/${post.img}`}/>
-
+          <img src={`${import.meta.env.VITE_API_URL}/upload/${post.img}`} />
           <h2>{post.title}</h2>
 
           <Link className="link" to={`/post/${post.id}`}>
