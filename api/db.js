@@ -1,4 +1,4 @@
-import mysql from "mysql2/promise";
+import mysql from "mysql2";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -15,6 +15,7 @@ export const db = mysql.createPool({
     rejectUnauthorized: false
   }
 });
+
 
 // Test connection
 try {
