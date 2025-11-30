@@ -16,13 +16,13 @@ export const db = mysql.createPool({
   }
 });
 
-
-// Test connection
-try {
-  const conn = await db.getConnection();
+// TEST CONNECTION — CALLBACK STYLE (works with mysql2 pool)
+db.getConnection((err, conn) => {
+  if (err) {
+    console.error("MySQL connection error:", err);
+    return;
+  }
   console.log("Connected to MySQL successfully!");
   console.log("Connected to host:", process.env.DB_HOST);
   conn.release();
-} catch (err) {
-  console.error("MySQL connection error:", err);
-}
+});
