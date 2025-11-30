@@ -5,6 +5,9 @@ import { Link,useNavigate } from 'react-router-dom'
 import axiosInstance from '../api.js'
 import { useContext } from 'react'
 
+
+console.log("API URL:", import.meta.env.VITE_API_URL);
+
 const Login = () => {
   const [inputs,setInputs]=React.useState({
     username:"",

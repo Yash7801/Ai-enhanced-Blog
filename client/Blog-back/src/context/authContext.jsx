@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext } from "react";
-import axiosInstance from "axios";
+import axiosInstance from "../api";  // ✅ correct import
 
 export const AuthContext = createContext();
 
@@ -9,7 +9,12 @@ export const AuthContextProvider = ({ children }) => {
   );
 
   const login = async (inputs) => {
-    const res = await axiosInstance.post("http://localhost:5200/api/auth/login", inputs,{withCredentials:true});
+    console.log("Login function TRIGGERED");
+    console.log("Axios Instance BaseURL:", axiosInstance.defaults.baseURL);
+    const res = await axiosInstance.post("/api/auth/login", inputs, {
+      withCredentials: true,
+    });
+
     setCurrentUser(res.data);
 
     // Save token separately
@@ -19,9 +24,12 @@ export const AuthContextProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    await axiosInstance.post("http://localhost:5200/api/auth/logout",{},{withCredentials:true});
+    await axiosInstance.post("/api/auth/logout", {}, { 
+      withCredentials: true 
+    });
+
     setCurrentUser(null);
-    localStorage.removeItem("token"); // remove token on logout
+    localStorage.removeItem("token");
   };
 
   useEffect(() => {

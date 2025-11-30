@@ -12,9 +12,10 @@ const app = express();
 
 // SIMPLE UNIVERSAL CORS (works on Render!)
 app.use(cors({
-  origin: true,          // automatically returns requesting origin
+  origin: "https://ai-enhanced-blog-3w1o761m3-yashs-projects-0c965709.vercel.app",
   credentials: true
 }));
+
 
 app.use(express.json());
 app.use(cookieParser());
