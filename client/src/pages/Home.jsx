@@ -26,7 +26,7 @@ const Home = () => {
           <div className="post" key={post.id}>
             
             <div className="img">
-              <img src={`./upload/${post.img}`} alt="" />
+              <img src={`https://axelblaze-api.onrender.com/upload/${image}`}/>
             </div>
 
             <div className="content">

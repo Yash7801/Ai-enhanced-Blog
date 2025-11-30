@@ -47,7 +47,7 @@ const Single = () => {
   return (
     <div className="single">
       <div className="content">
-        {post.img && <img src={`../upload/${post.img}`} alt="" />}
+        {post.img && <img src={`https://axelblaze-api.onrender.com/upload/${image}`}/>}
         <div className="user">
           {post.userImg && <img src={post.userImg} alt="" />}
           <div className="info">
