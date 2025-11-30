@@ -20,11 +20,10 @@ const Single = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // FIX: Remove localhost
         const res = await axiosInstance.get(`/api/posts/${postId}`);
         setPost(res.data);
       } catch (err) {
-        console.log(err);
+        console.log("Single post fetch error:", err);
       }
     };
     fetchData();
@@ -34,7 +33,6 @@ const Single = () => {
 
   const handleDelete = async () => {
     try {
-      // FIX: Remove localhost
       await axiosInstance.delete(`/api/posts/${postId}`, {
         withCredentials: true,
       });
@@ -44,19 +42,39 @@ const Single = () => {
     }
   };
 
+  const username = post.username || "Unknown user";
+
   return (
     <div className="single">
       <div className="content">
-        {post.img && <img src={`${import.meta.env.VITE_API_URL}/upload/${post.img}`} />}
+        {post.img && (
+          <img src={`${import.meta.env.VITE_API_URL}/upload/${post.img}`} />
+        )}
+
         <div className="user">
           {post.userImg && <img src={post.userImg} alt="" />}
+          
           <div className="info">
-            <span>{post.username}</span>
-            <p>Created on: {moment(post.created_at).format("MMM D, YYYY")}</p>
+            <span>{username}</span>
+
+            <p>
+              Created on:{" "}
+              {post.created_at
+                ? moment(post.created_at).format("MMM D, YYYY")
+                : "Unknown"}
+            </p>
+
             <br />
-            <p>Last updated: {moment(post.updated_at).format("MMM D, YYYY")}</p>
+
+            <p>
+              Last updated:{" "}
+              {post.updated_at
+                ? moment(post.updated_at).format("MMM D, YYYY")
+                : "Unknown"}
+            </p>
           </div>
-          {currentUser.username === post.username && (
+
+          {currentUser?.username === post?.username && (
             <div className="edit">
               <Link to={`/Context?edit=${postId}`} state={post}>
                 <img src={Edit} alt="" />
@@ -65,7 +83,9 @@ const Single = () => {
             </div>
           )}
         </div>
+
         <h1>{post.title}</h1>
+
         <div
           className="description"
           dangerouslySetInnerHTML={{ __html: post.description }}

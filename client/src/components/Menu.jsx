@@ -8,16 +8,16 @@ export const Menu = ({ cat, currentPostId }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-         const res = await axiosInstance.get(`/api/posts/?cat=${cat}`);
+        const res = await axiosInstance.get(`/api/posts/?cat=${cat}`);
         setPosts(res.data);
       } catch (err) {
-        console.log(err);
+        console.log("Menu fetch error:", err);
       }
     };
     fetchData();
   }, [cat]);
 
-  // Remove the current post from suggestions
+  // Remove current post
   const filteredPosts = posts.filter(p => p.id !== currentPostId);
 
   return (
@@ -26,7 +26,20 @@ export const Menu = ({ cat, currentPostId }) => {
 
       {filteredPosts.map((post) => (
         <div className='post' key={post.id}>
-          <img src={`${import.meta.env.VITE_API_URL}/upload/${post.img}`} />
+          
+          {/* SAFER IMAGE */}
+          {post.img ? (
+            <img
+              src={`${import.meta.env.VITE_API_URL}/upload/${post.img}`}
+              alt={post.title}
+            />
+          ) : (
+            <img
+              src="https://placehold.co/600x400?text=No+Image"
+              alt="No image"
+            />
+          )}
+
           <h2>{post.title}</h2>
 
           <Link className="link" to={`/post/${post.id}`}>

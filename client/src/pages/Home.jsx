@@ -13,7 +13,7 @@ const Home = () => {
         const res = await axiosInstance.get(`/api/posts${cat}`);
         setPosts(res.data);
       } catch (err) {
-        console.log(err);
+        console.log("Home fetch error:", err);
       }
     };
     fetchData();
@@ -25,9 +25,19 @@ const Home = () => {
         {posts.map(post => (
           <div className="post" key={post.id}>
             
+            {/* IMAGE FIX */}
             <div className="img">
-              <img src={`${import.meta.env.VITE_API_URL}/upload/${post.img}`} />
-
+              {post.img ? (
+                <img 
+                  src={`${import.meta.env.VITE_API_URL}/upload/${post.img}`} 
+                  alt={post.title} 
+                />
+              ) : (
+                <img 
+                  src="https://placehold.co/600x400?text=No+Image" 
+                  alt="No image" 
+                />
+              )}
             </div>
 
             <div className="content">
@@ -35,15 +45,14 @@ const Home = () => {
                 <h1>{post.title}</h1>
               </Link>
 
-              {/* Teaser preview */}
+              {/* SAFE DESCRIPTION */}
               <p>
-                {post.description
-                  ?.replace(/<[^>]+>/g, "")     // remove HTML tags
-                  .slice(0, 150)                // limit teaser
+                {(post.description || "")
+                  .replace(/<[^>]+>/g, "")
+                  .slice(0, 150)
                 }...
               </p>
 
-              {/* Working Read More Button */}
               <Link className='link' to={`/post/${post.id}`}>
                 <button>Read More</button>
               </Link>
