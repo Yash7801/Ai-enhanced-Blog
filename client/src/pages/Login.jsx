@@ -1,5 +1,5 @@
 import React from 'react'
-import { AuthContext } from '../context/authContext.jsx';
+import { AuthContext } from '../contexts/authContext.jsx';
 import "../style.scss"
 import { Link,useNavigate } from 'react-router-dom'
 import axiosInstance from '../api.js'

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Logo from "../img/logo.png";
 import { useContext } from "react";
-import { AuthContext } from "../context/authContext.jsx";
+import { AuthContext } from "../contexts/authContext.jsx";
 
 const Navbar = () => {
   const { currentUser, logout } = useContext(AuthContext);

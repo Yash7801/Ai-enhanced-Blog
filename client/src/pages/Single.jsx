@@ -5,7 +5,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import Menu from "../components/Menu";
 import moment from "moment";
 import axiosInstance from "../api";
-import { AuthContext } from "../context/authContext";
+import { AuthContext } from "../contexts/authContext";
 
 const Single = () => {
   const [post, setPost] = useState(null);
