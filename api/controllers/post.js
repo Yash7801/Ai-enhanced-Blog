@@ -1,11 +1,6 @@
 import { db } from "../db.js";
 import jwt from "jsonwebtoken";
 
-// ✅ Your REAL Railway backend URL
-const backendURL =
-  process.env.BACKEND_URL ||
-  "https://ai-enhanced-blog-production.up.railway.app";
-
 // ---------------------------------------------
 // GET ALL POSTS
 // ---------------------------------------------
@@ -19,13 +14,8 @@ export const getPosts = async (req, res) => {
 
     const [rows] = await db.query(q, params);
 
-    // Add full image URL
-    const formatted = rows.map((post) => ({
-      ...post,
-      img: post.img ? `${backendURL}/uploads/${post.img}` : null,
-    }));
-
-    return res.status(200).json(formatted);
+    // No need to prefix URLs — Cloudinary already returns full URLs
+    return res.status(200).json(rows);
   } catch (err) {
     console.log("GET POSTS ERROR:", err);
     return res.status(500).json(err);
@@ -44,16 +34,11 @@ export const getPost = async (req, res) => {
       WHERE p.id = ?
     `;
 
-    const [data] = await db.query(q, [req.params.id]);
+    const [rows] = await db.query(q, [req.params.id]);
 
-    if (!data.length) return res.status(404).json("Post not found");
+    if (!rows.length) return res.status(404).json("Post not found");
 
-    const post = data[0];
-
-    // Add full image URL
-    post.img = post.img ? `${backendURL}/uploads/${post.img}` : null;
-
-    return res.status(200).json(post);
+    return res.status(200).json(rows[0]);
   } catch (err) {
     console.log("GET POST ERROR:", err);
     return res.status(500).json(err);
@@ -76,7 +61,7 @@ export const addPost = async (req, res) => {
     const values = [
       req.body.title,
       req.body.description,
-      req.body.img, // filename only
+      req.body.img,  // Cloudinary URL
       req.body.cat,
       userInfo.id,
     ];
@@ -128,7 +113,7 @@ export const updatePost = async (req, res) => {
     const values = [
       req.body.title,
       req.body.description,
-      req.body.img, // filename only
+      req.body.img,  // Cloudinary URL
       req.body.cat,
       postId,
       userInfo.id,

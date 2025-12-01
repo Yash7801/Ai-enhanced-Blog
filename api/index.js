@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import multer from "multer";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 import suggestionRouter from "./routes/suggestion.js";
 import postsRouter from "./routes/posts.js";
@@ -11,35 +13,34 @@ import authRouter from "./routes/auth.js";
 const app = express();
 
 // CORS
-app.use(cors({
-  origin: true,
-  credentials: true
-}));
-
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
 // ---------------------------------------------
-// 📌 MULTER DISK STORAGE (Railway)
+// CLOUDINARY CONFIG
 // ---------------------------------------------
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads");
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname);
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Cloudinary Storage
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "blog_uploads",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
   },
 });
 
 const upload = multer({ storage });
 
-// 📌 Upload route
+// Upload Route (returns FULL Cloudinary URL)
 app.post("/api/upload", upload.single("file"), (req, res) => {
-  res.status(200).json({ filename: req.file.filename });
+  res.status(200).json({ url: req.file.path });
 });
-
-// 📌 Make uploads public
-app.use("/uploads", express.static("uploads"));
 
 // ROUTES
 app.use("/api/suggest", suggestionRouter);
@@ -47,6 +48,7 @@ app.use("/api/posts", postsRouter);
 app.use("/api/users", userRouter);
 app.use("/api/auth", authRouter);
 
-app.listen(process.env.PORT, () => {
-  console.log("Server running on port", process.env.PORT);
+// START SERVER
+app.listen(process.env.PORT || 8800, () => {
+  console.log("Server running");
 });
