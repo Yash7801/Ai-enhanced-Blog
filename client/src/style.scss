@@ -53,6 +53,10 @@ body {
         /*         AUTH          */
         /* ===================== */
 
+        /* ===================== */
+        /*         AUTH          */
+        /* ===================== */
+
         .auth {
             display: flex;
             flex-direction: column;
@@ -74,6 +78,8 @@ body {
                 background-color: white;
                 width: 300px;
                 gap: 10px;
+                border-radius: 10px;
+                /* small improvement */
             }
 
             input {
@@ -81,6 +87,9 @@ body {
                 font-size: 16px;
                 border: none;
                 border-bottom: 1px solid gray;
+                outline: none;
+                background: transparent;
+                color: #222;
             }
 
             button {
@@ -89,13 +98,40 @@ body {
                 background-color: darkgreen;
                 color: white;
                 cursor: pointer;
+                border-radius: 5px;
+                font-weight: 500;
+
+                &:hover {
+                    background-color: #0a5a0a;
+                }
             }
 
+            /* Text under login (Register link) */
             span {
                 font-size: 15px;
                 text-align: center;
+                margin-top: 8px;
+                color: #444;
+                /* Light mode */
+            }
+
+            /* Dark mode version */
+            body.dark & span {
+                color: var(--accent);
+                /* Uses your theme accent: #8af7ef */
+            }
+
+            /* ERROR MESSAGE (wrong password / username) */
+            p {
+                color: #ff6b6b;
+                /* Soft premium red */
+                text-align: center;
+                font-size: 14px;
+                margin-top: -5px;
+                font-weight: 500;
             }
         }
+
 
 
         /* ===================== */
@@ -115,7 +151,7 @@ body {
                 .logo img {
                     width: 120px;
                     border-radius: 50%; // round logo
-                    border: 8px solid var(--underline);// visible border
+                    border: 8px solid var(--underline); // visible border
                 }
 
 

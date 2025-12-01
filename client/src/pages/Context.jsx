@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import ReactQuill from 'react-quill'
+import React, { useState, useEffect } from 'react';
+import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import axiosInstance from '../api';
 import { useLocation } from 'react-router-dom';
@@ -7,40 +7,55 @@ import moment from 'moment';
 
 const Context = () => {
   const state = useLocation().state;
+
   const [value, setValue] = useState(state?.description || "");
   const [title, setTitle] = useState(state?.title || "");
   const [file, setFile] = useState(null);
   const [suggestion, setSuggestion] = useState("");
   const [typingTimeout, setTypingTimeout] = useState(null);
   const [cat, setCat] = useState(state?.cat || "");
-  const [showFullSuggestion, setShowFullSuggestion] = useState(false); // ✅ added toggle state
+  const [showFullSuggestion, setShowFullSuggestion] = useState(false);
 
+  // --------------------------------------------------
+  // AI Suggestion (Optimized, Debounced, Anti-Spam)
+  // --------------------------------------------------
   useEffect(() => {
-    if (value.trim().length < 10) return;
+    // prevent tiny input
+    if (value.trim().length < 30) {
+      setSuggestion("");
+      return;
+    }
+
+    // prevent backspace spam
+    if (value.endsWith(" ")) return;
 
     clearTimeout(typingTimeout);
 
     const timeout = setTimeout(async () => {
       try {
+        // avoid duplicate suggestions
+        if (suggestion && value.includes(suggestion.slice(0, 20))) return;
+
         const res = await axiosInstance.post("/api/suggest", { text: value });
 
-        if (!res.data.suggestion || res.data.suggestion.trim() === suggestion.trim()) return;
+        if (!res.data.suggestion) return;
 
         setSuggestion(
           res.data.suggestion
-            ?.replace(/<[^>]*>/g, "")
+            .replace(/<[^>]*>/g, "")
             .replace(/\s+/g, " ")
             .trim()
         );
       } catch (err) {
         console.log("AI suggest error:", err);
       }
-    }, 1200);
+    }, 2500); // 2.5s debounce (perfect balance)
 
     setTypingTimeout(timeout);
     return () => clearTimeout(timeout);
   }, [value]);
 
+  // Insert suggestion with TAB
   const handleKeyDown = (e) => {
     if (e.key === "Tab" && suggestion) {
       e.preventDefault();
@@ -49,69 +64,83 @@ const Context = () => {
     }
   };
 
-const upload = async () => {
-  if (!file) return "";
+  // --------------------------------------------------
+  // Image Upload using Cloudinary
+  // --------------------------------------------------
+  const upload = async () => {
+    if (!file) return "";
 
-  try {
-    const formData = new FormData();
-    formData.append("file", file);  // MUST BE "file"
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
 
-    const res = await axiosInstance.post("/api/upload", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-      withCredentials: true,
-    });
+      const res = await axiosInstance.post("/api/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true,
+      });
 
-    return res.data.url;
-  } catch (err) {
-    console.log("Upload error:", err);
-  }
-};
+      return res.data.url;
+    } catch (err) {
+      console.log("Upload error:", err);
+    }
+  };
 
-
-
-
-  const handleClick = async e => {
+  // --------------------------------------------------
+  // Publish / Update Post
+  // --------------------------------------------------
+  const handleClick = async (e) => {
     e.preventDefault();
     const imgUrl = await upload();
 
     try {
       state
-        ? await axiosInstance.put(`/api/posts/${state.id}`, {
-            title,
-            description: value,
-            img: file ? imgUrl : "",
-            cat,
-          }, { withCredentials: true })
-        : await axiosInstance.post("/api/posts", {
-            title,
-            description: value,
-            img: file ? imgUrl : "",
-            date: moment(Date.now()).format("YYYY-MM-DD HH:mm:ss"),
-            cat
-          }, { withCredentials: true });
+        ? await axiosInstance.put(
+            `/api/posts/${state.id}`,
+            {
+              title,
+              description: value,
+              img: file ? imgUrl : "",
+              cat,
+            },
+            { withCredentials: true }
+          )
+        : await axiosInstance.post(
+            "/api/posts",
+            {
+              title,
+              description: value,
+              img: file ? imgUrl : "",
+              date: moment(Date.now()).format("YYYY-MM-DD HH:mm:ss"),
+              cat,
+            },
+            { withCredentials: true }
+          );
     } catch (err) {
       console.log(err);
     }
   };
 
   return (
-    <div className='context'>
+    <div className="context">
       <div className="content">
-        <input type='text' value={title} placeholder='Title' onChange={e => setTitle(e.target.value)} />
+        <input
+          type="text"
+          value={title}
+          placeholder="Title"
+          onChange={(e) => setTitle(e.target.value)}
+        />
 
-        {/* ✅ Editor */}
+        {/* Editor */}
         <div className="editorContainer" onKeyDown={handleKeyDown}>
           <ReactQuill
-            className='editor'
+            className="editor"
             theme="snow"
             value={value}
             onChange={setValue}
           />
         </div>
 
-        {/* ✅ AI Suggestion (trimmed + toggle) */}
+        {/* AI Suggestion Box */}
         {suggestion && (
           <div
             style={{
@@ -130,13 +159,12 @@ const upload = async () => {
             ✨ <b>AI Suggestion:</b>{" "}
             {showFullSuggestion
               ? suggestion
-              : suggestion.split(" ").slice(0, 40).join(" ") + "..."}{" "}
+              : suggestion.split(" ").slice(0, 40).join(" ") + "..."}
             {suggestion.split(" ").length > 40 && (
               <span
                 onClick={() => setShowFullSuggestion(!showFullSuggestion)}
                 style={{
                   color: "teal",
-                  fontStyle: "normal",
                   cursor: "pointer",
                   marginLeft: "5px",
                 }}
@@ -155,15 +183,19 @@ const upload = async () => {
             <b>Status:</b> Draft
           </span>
           <span>
-            <b>Visibility: </b> Public
+            <b>Visibility:</b> Public
           </span>
+
           <input
-            style={{ display: 'none' }}
-            type='file'
+            style={{ display: "none" }}
+            type="file"
             id="file"
-            onChange={e => setFile(e.target.files[0])}
+            onChange={(e) => setFile(e.target.files[0])}
           />
-          <label className='file' htmlFor='file'>Upload Image</label>
+          <label className="file" htmlFor="file">
+            Upload Image
+          </label>
+
           <div className="buttons">
             <button>Save as a draft</button>
             <button onClick={handleClick}>Publish</button>
@@ -172,23 +204,27 @@ const upload = async () => {
 
         <div className="item">
           <h1>Category</h1>
-          {["art", "science", "technology", "Cinema", "design", "food"].map((c) => (
-            <div className="cat" key={c}>
-              <input
-                type='radio'
-                checked={cat === c}
-                name='cat'
-                value={c}
-                id={c}
-                onChange={e => setCat(e.target.value)}
-              />
-              <label htmlFor={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</label>
-            </div>
-          ))}
+          {["art", "science", "technology", "Cinema", "design", "food"].map(
+            (c) => (
+              <div className="cat" key={c}>
+                <input
+                  type="radio"
+                  checked={cat === c}
+                  name="cat"
+                  value={c}
+                  id={c}
+                  onChange={(e) => setCat(e.target.value)}
+                />
+                <label htmlFor={c}>
+                  {c.charAt(0).toUpperCase() + c.slice(1)}
+                </label>
+              </div>
+            )
+          )}
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Context
+export default Context;
