@@ -16,14 +16,31 @@ const app = express();
 // ---------------------------------------------
 //  CORS (THIS IS THE ONLY CORRECT CONFIG)
 // ---------------------------------------------
+// ---------------------------------------------
+//  CORS (THIS IS THE ONLY CORRECT CONFIG)
+// ---------------------------------------------
 const FRONTEND_URL = "https://blogpage-two-sigma.vercel.app";
 
-app.use(
-  cors({
-    origin: FRONTEND_URL,
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: "https://blogpage-two-sigma.vercel.app",
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  exposedHeaders: ["Set-Cookie"],    // ⭐ IMPORTANT FIX
+}));
+
+
+// ⭐ IMPORTANT: PRE-FLIGHT HANDLER ⭐
+app.options("*", cors({
+  origin: "https://blogpage-two-sigma.vercel.app",
+  credentials: true,
+  exposedHeaders: ["Set-Cookie"],   // ⭐ VERY IMPORTANT
+}));
+
+
+// ---------------------------------------------
+// JSON + Cookies
+// --------------------------------------------
 
 app.use(express.json());
 app.use(cookieParser());
