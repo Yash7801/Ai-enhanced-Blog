@@ -1,12 +1,14 @@
 import { db } from "../db.js";
 import jwt from "jsonwebtoken";
 
-// Set your Railway backend URL here
+// ✅ Your REAL Railway backend URL
 const backendURL =
   process.env.BACKEND_URL ||
-  "https://your-railway-backend.up.railway.app";
+  "https://ai-enhanced-blog-production.up.railway.app";
 
+// ---------------------------------------------
 // GET ALL POSTS
+// ---------------------------------------------
 export const getPosts = async (req, res) => {
   try {
     const q = req.query.cat
@@ -17,6 +19,7 @@ export const getPosts = async (req, res) => {
 
     const [rows] = await db.query(q, params);
 
+    // Add full image URL
     const formatted = rows.map((post) => ({
       ...post,
       img: post.img ? `${backendURL}/uploads/${post.img}` : null,
@@ -29,7 +32,9 @@ export const getPosts = async (req, res) => {
   }
 };
 
+// ---------------------------------------------
 // GET SINGLE POST
+// ---------------------------------------------
 export const getPost = async (req, res) => {
   try {
     const q = `
@@ -41,7 +46,11 @@ export const getPost = async (req, res) => {
 
     const [data] = await db.query(q, [req.params.id]);
 
+    if (!data.length) return res.status(404).json("Post not found");
+
     const post = data[0];
+
+    // Add full image URL
     post.img = post.img ? `${backendURL}/uploads/${post.img}` : null;
 
     return res.status(200).json(post);
@@ -51,7 +60,9 @@ export const getPost = async (req, res) => {
   }
 };
 
-// ADD POST
+// ---------------------------------------------
+// ADD NEW POST
+// ---------------------------------------------
 export const addPost = async (req, res) => {
   try {
     const token = req.cookies.access_token;
@@ -65,7 +76,7 @@ export const addPost = async (req, res) => {
     const values = [
       req.body.title,
       req.body.description,
-      req.body.img,
+      req.body.img, // filename only
       req.body.cat,
       userInfo.id,
     ];
@@ -79,7 +90,9 @@ export const addPost = async (req, res) => {
   }
 };
 
+// ---------------------------------------------
 // DELETE POST
+// ---------------------------------------------
 export const deletePost = async (req, res) => {
   try {
     const token = req.cookies.access_token;
@@ -99,7 +112,9 @@ export const deletePost = async (req, res) => {
   }
 };
 
+// ---------------------------------------------
 // UPDATE POST
+// ---------------------------------------------
 export const updatePost = async (req, res) => {
   try {
     const token = req.cookies.access_token;
@@ -113,7 +128,7 @@ export const updatePost = async (req, res) => {
     const values = [
       req.body.title,
       req.body.description,
-      req.body.img,
+      req.body.img, // filename only
       req.body.cat,
       postId,
       userInfo.id,
