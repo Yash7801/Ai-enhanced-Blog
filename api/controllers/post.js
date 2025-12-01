@@ -14,7 +14,6 @@ export const getPosts = async (req, res) => {
 
     const [rows] = await db.query(q, params);
 
-    // No need to prefix URLs — Cloudinary already returns full URLs
     return res.status(200).json(rows);
   } catch (err) {
     console.log("GET POSTS ERROR:", err);
@@ -53,7 +52,7 @@ export const addPost = async (req, res) => {
     const token = req.cookies.access_token;
     if (!token) return res.status(401).json("Not authenticated");
 
-    const userInfo = jwt.verify(token, "jwtkey");
+    const userInfo = jwt.verify(token, process.env.JWT_SECRET);
 
     const q =
       "INSERT INTO posts(`title`, `description`, `img`, `cat`, `uid`) VALUES (?)";
@@ -61,7 +60,7 @@ export const addPost = async (req, res) => {
     const values = [
       req.body.title,
       req.body.description,
-      req.body.img,  // Cloudinary URL
+      req.body.img,
       req.body.cat,
       userInfo.id,
     ];
@@ -83,7 +82,7 @@ export const deletePost = async (req, res) => {
     const token = req.cookies.access_token;
     if (!token) return res.status(401).json("Not authenticated");
 
-    const userInfo = jwt.verify(token, "jwtkey");
+    const userInfo = jwt.verify(token, process.env.JWT_SECRET);
     const postId = req.params.id;
 
     const q = "DELETE FROM posts WHERE `id`=? AND `uid`=?";
@@ -105,15 +104,16 @@ export const updatePost = async (req, res) => {
     const token = req.cookies.access_token;
     if (!token) return res.status(401).json("Not authenticated");
 
-    const userInfo = jwt.verify(token, "jwtkey");
+    const userInfo = jwt.verify(token, process.env.JWT_SECRET);
     const postId = req.params.id;
 
     const q =
       "UPDATE posts SET `title`=?, `description`=?, `img`=?, `cat`=? WHERE `id`=? AND `uid`=?";
+
     const values = [
       req.body.title,
       req.body.description,
-      req.body.img,  // Cloudinary URL
+      req.body.img,
       req.body.cat,
       postId,
       userInfo.id,

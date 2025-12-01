@@ -35,14 +35,20 @@ export const login = async (req, res) => {
     const isCorrect = bcrypt.compareSync(req.body.password, user.password);
     if (!isCorrect) return res.status(400).json("Wrong credentials!");
 
-    const token = jwt.sign({ id: user.id }, "jwtkey");
+    // ✅ Use JWT secret from Railway (.env)
+    const token = jwt.sign(
+      { id: user.id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
     const { password, ...rest } = user;
 
+    // ❗ NO CUSTOM DOMAIN → breaks cookies. REMOVE IT.
     res.cookie("access_token", token, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      domain: "ai-enhanced-blog.onrender.com", // REQUIRED for Render cookies
     });
 
     res.status(200).json(rest);
@@ -57,7 +63,6 @@ export const logout = (req, res) => {
     httpOnly: true,
     secure: true,
     sameSite: "none",
-    domain: "ai-enhanced-blog.onrender.com",
   });
 
   res.status(200).json("Logged out");
