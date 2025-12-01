@@ -2,85 +2,63 @@ import { db } from "../db.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-// ---------------------------------------------
 // REGISTER
-// ---------------------------------------------
 export const register = async (req, res) => {
   try {
     const q = "SELECT * FROM users WHERE username = ? OR email = ?";
     const [existing] = await db.query(q, [req.body.username, req.body.email]);
 
-    if (existing.length) {
-      return res.status(409).json("User already exists!");
-    }
+    if (existing.length) return res.status(409).json("User already exists!");
 
-    const salt = bcrypt.genSaltSync(10);
-    const hashedPassword = bcrypt.hashSync(req.body.password, salt);
+    const hashed = bcrypt.hashSync(req.body.password, 10);
 
-    const q2 = "INSERT INTO users(`username`, `email`, `password`) VALUES (?)";
-    const values = [req.body.username, req.body.email, hashedPassword];
+    const q2 = "INSERT INTO users(`username`,`email`,`password`) VALUES (?)";
+    const values = [req.body.username, req.body.email, hashed];
 
     const [result] = await db.query(q2, [values]);
 
-    res.status(201).json({
-      id: result.insertId,
-      username: req.body.username,
-      email: req.body.email,
-    });
+    res.status(201).json({ id: result.insertId });
   } catch (err) {
-    console.log("REGISTER ERROR:", err);
     res.status(500).json(err);
   }
 };
 
-// ---------------------------------------------
 // LOGIN
-// ---------------------------------------------
 export const login = async (req, res) => {
   try {
     const q = "SELECT * FROM users WHERE username = ?";
-    const [data] = await db.query(q, [req.body.username]);
+    const [users] = await db.query(q, [req.body.username]);
 
-    if (data.length === 0) {
-      return res.status(404).json("User not found!");
-    }
+    if (!users.length) return res.status(404).json("User not found!");
 
-    const isPasswordCorrect = bcrypt.compareSync(
-      req.body.password,
-      data[0].password
-    );
-    if (!isPasswordCorrect) {
-      return res.status(400).json("Wrong username or password!");
-    }
+    const user = users[0];
+    const isCorrect = bcrypt.compareSync(req.body.password, user.password);
+    if (!isCorrect) return res.status(400).json("Wrong credentials!");
 
-    const token = jwt.sign({ id: data[0].id }, "jwtkey");
-    const { password, ...other } = data[0];
+    const token = jwt.sign({ id: user.id }, "jwtkey");
 
-    // IMPORTANT: cookie must be secure + sameSite none for Vercel + Render
-    res
-      .cookie("access_token", token, {
-        httpOnly: true,
-        secure: true,        // required for HTTPS
-        sameSite: "none",    // required for cross-site cookies
-      })
-      .status(200)
-      .json(other);
+    const { password, ...rest } = user;
+
+    res.cookie("access_token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      domain: "ai-enhanced-blog.onrender.com"   // IMPORTANT
+    });
+
+    res.status(200).json(rest);
   } catch (err) {
-    console.log("LOGIN ERROR:", err);
     res.status(500).json(err);
   }
 };
 
-// ---------------------------------------------
 // LOGOUT
-// ---------------------------------------------
 export const logout = (req, res) => {
-  res
-    .clearCookie("access_token", {
-      httpOnly: true,
-      secure: true,        // MUST match login cookie
-      sameSite: "none",
-    })
-    .status(200)
-    .json("User has been logged out.");
+  res.clearCookie("access_token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    domain: "ai-enhanced-blog.onrender.com"
+  });
+  res.status(200).json("Logged out");
 };
