@@ -6,18 +6,16 @@ dotenv.config();
 
 const router = express.Router();
 
-// ---- AI SUGGESTION ROUTE ----
 router.post("/", async (req, res) => {
   const { text } = req.body;
 
-  // If no API key available, return empty suggestion
   if (!process.env.GEMINI_API_KEY) {
     return res.status(200).json({ suggestion: "" });
   }
 
   try {
     const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         contents: [
           {
@@ -38,7 +36,7 @@ router.post("/", async (req, res) => {
   } catch (err) {
     console.error("GEMINI ERROR:", err.response?.data || err.message);
 
-    // IMPORTANT: never break your UI → send empty suggestion
+    // Do NOT break UI
     res.status(200).json({ suggestion: "" });
   }
 });
