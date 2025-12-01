@@ -39,8 +39,17 @@ const upload = multer({ storage });
 
 // Upload Route (returns FULL Cloudinary URL)
 app.post("/api/upload", upload.single("file"), (req, res) => {
-  res.status(200).json({ url: req.file.path });
+  if (!req.file) {
+    // prevents 500 crash
+    return res.status(400).json({ error: "File not received" });
+  }
+
+  // CloudinaryStorage usually returns secure_url
+  res.status(200).json({
+    url: req.file.path || req.file.secure_url
+  });
 });
+
 
 // ROUTES
 app.use("/api/suggest", suggestionRouter);

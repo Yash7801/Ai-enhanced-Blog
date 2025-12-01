@@ -50,17 +50,25 @@ const Context = () => {
   };
 
 const upload = async () => {
+  if (!file) return "";
+
   try {
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", file);  // MUST BE "file"
 
-    const res = await axiosInstance.post("/api/upload", formData);
+    const res = await axiosInstance.post("/api/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      withCredentials: true,
+    });
 
-    return res.data.url;   // Cloudinary URL
+    return res.data.url;
   } catch (err) {
     console.log("Upload error:", err);
   }
 };
+
 
 
 

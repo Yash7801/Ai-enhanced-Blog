@@ -5,3 +5,7 @@
 .env.production
 .env.test
 .env.*
+
+
+#Node modules
+node_modules/
