@@ -1,6 +1,11 @@
 import { db } from "../db.js";
 import jwt from "jsonwebtoken";
 
+// Set your Railway backend URL here
+const backendURL =
+  process.env.BACKEND_URL ||
+  "https://your-railway-backend.up.railway.app";
+
 // GET ALL POSTS
 export const getPosts = async (req, res) => {
   try {
@@ -12,7 +17,12 @@ export const getPosts = async (req, res) => {
 
     const [rows] = await db.query(q, params);
 
-    return res.status(200).json(rows);
+    const formatted = rows.map((post) => ({
+      ...post,
+      img: post.img ? `${backendURL}/uploads/${post.img}` : null,
+    }));
+
+    return res.status(200).json(formatted);
   } catch (err) {
     console.log("GET POSTS ERROR:", err);
     return res.status(500).json(err);
@@ -31,7 +41,10 @@ export const getPost = async (req, res) => {
 
     const [data] = await db.query(q, [req.params.id]);
 
-    return res.status(200).json(data[0]);
+    const post = data[0];
+    post.img = post.img ? `${backendURL}/uploads/${post.img}` : null;
+
+    return res.status(200).json(post);
   } catch (err) {
     console.log("GET POST ERROR:", err);
     return res.status(500).json(err);

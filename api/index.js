@@ -2,8 +2,6 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import multer from "multer";
-import { v2 as cloudinary } from "cloudinary";
-import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 import suggestionRouter from "./routes/suggestion.js";
 import postsRouter from "./routes/posts.js";
@@ -12,7 +10,7 @@ import authRouter from "./routes/auth.js";
 
 const app = express();
 
-// SIMPLE UNIVERSAL CORS (works on Render!)
+// CORS
 app.use(cors({
   origin: true,
   credentials: true
@@ -21,37 +19,29 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-
 // ---------------------------------------------
-// 🔥 CLOUDINARY CONFIG (only new part)
+// 📌 MULTER DISK STORAGE (Railway)
 // ---------------------------------------------
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-// Cloudinary storage
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "blog_uploads",
-    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads");
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname);
   },
 });
 
 const upload = multer({ storage });
 
-
-// 🔥 Replace your old upload route with Cloudinary upload
+// 📌 Upload route
 app.post("/api/upload", upload.single("file"), (req, res) => {
-  res.status(200).json({ url: req.file.path }); // Cloudinary URL
+  res.status(200).json({ filename: req.file.filename });
 });
 
+// 📌 Make uploads public
+app.use("/uploads", express.static("uploads"));
 
-// ---------------------------------------------------
-// Keep ALL other routes EXACTLY the same
-// ---------------------------------------------------
+// ROUTES
 app.use("/api/suggest", suggestionRouter);
 app.use("/api/posts", postsRouter);
 app.use("/api/users", userRouter);

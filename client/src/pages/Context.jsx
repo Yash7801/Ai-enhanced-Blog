@@ -49,16 +49,17 @@ const Context = () => {
     }
   };
 
-  const upload = async () => {
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await axiosInstance.post("/api/upload", formData);
-      return res.data.url;
-    } catch (err) {
-      console.log(err);
-    }
-  };
+const upload = async () => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await axiosInstance.post("/api/upload", formData);
+    return res.data.filename;
+  } catch (err) {
+    console.log(err);
+  }
+};
+
 
   const handleClick = async e => {
     e.preventDefault();
