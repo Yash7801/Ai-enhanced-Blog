@@ -11,6 +11,7 @@ const Home = () => {
     const fetchData = async () => {
       try {
         const res = await axiosInstance.get(`/api/posts${cat}`);
+        console.log("POSTS RECEIVED:", res.data);
         setPosts(res.data);
       } catch (err) {
         console.log("Home fetch error:", err);
