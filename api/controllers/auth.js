@@ -38,7 +38,7 @@ export const login = async (req, res) => {
     // ✅ Use JWT secret from Railway (.env)
     const token = jwt.sign(
       { id: user.id },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET_KEY,
       { expiresIn: "7d" }
     );
 

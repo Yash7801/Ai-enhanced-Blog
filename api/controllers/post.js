@@ -52,7 +52,7 @@ export const addPost = async (req, res) => {
     const token = req.cookies.access_token;
     if (!token) return res.status(401).json("Not authenticated");
 
-    const userInfo = jwt.verify(token, process.env.JWT_SECRET);
+    const userInfo = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
     const q =
       "INSERT INTO posts(`title`, `description`, `img`, `cat`, `uid`) VALUES (?)";
@@ -82,7 +82,7 @@ export const deletePost = async (req, res) => {
     const token = req.cookies.access_token;
     if (!token) return res.status(401).json("Not authenticated");
 
-    const userInfo = jwt.verify(token, process.env.JWT_SECRET);
+    const userInfo = jwt.verify(token, process.env.JWT_SECRET_KEY);
     const postId = req.params.id;
 
     const q = "DELETE FROM posts WHERE `id`=? AND `uid`=?";
@@ -104,7 +104,7 @@ export const updatePost = async (req, res) => {
     const token = req.cookies.access_token;
     if (!token) return res.status(401).json("Not authenticated");
 
-    const userInfo = jwt.verify(token, process.env.JWT_SECRET);
+    const userInfo = jwt.verify(token, process.env.JWT_SECRET_KEY);
     const postId = req.params.id;
 
     const q =
