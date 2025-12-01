@@ -8,40 +8,41 @@ export const AuthContextProvider = ({ children }) => {
     JSON.parse(localStorage.getItem("user")) || null
   );
 
+  /* ============================
+         LOGIN
+  ============================ */
   const login = async (inputs) => {
-    console.log("Login function TRIGGERED");
-    console.log("Axios Instance BaseURL:", axiosInstance.defaults.baseURL);
-
     const res = await axiosInstance.post("/api/auth/login", inputs, {
       withCredentials: true,
     });
 
+    // Backend returns user (without password)
     setCurrentUser(res.data);
-
-    // ❌ REMOVE THIS (backend does not return a token)
-    // if (res.data.token) {
-    //   localStorage.setItem("token", res.data.token);
-    // }
-
-    // (cookie is already set by backend)
   };
 
+  /* ============================
+         LOGOUT
+  ============================ */
   const logout = async () => {
     await axiosInstance.post(
       "/api/auth/logout",
       {},
-      {
-        withCredentials: true,
-      }
+      { withCredentials: true }
     );
 
     setCurrentUser(null);
-
-    
+    localStorage.removeItem("user");
   };
 
+  /* ============================
+         SYNC WITH LOCALSTORAGE
+  ============================ */
   useEffect(() => {
-    localStorage.setItem("user", JSON.stringify(currentUser));
+    if (currentUser) {
+      localStorage.setItem("user", JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem("user");
+    }
   }, [currentUser]);
 
   return (

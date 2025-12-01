@@ -36,14 +36,13 @@ export const login = async (req, res) => {
     if (!isCorrect) return res.status(400).json("Wrong credentials!");
 
     const token = jwt.sign({ id: user.id }, "jwtkey");
-
     const { password, ...rest } = user;
 
     res.cookie("access_token", token, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      domain: "ai-enhanced-blog.onrender.com"   // IMPORTANT
+      domain: "ai-enhanced-blog.onrender.com", // REQUIRED for Render cookies
     });
 
     res.status(200).json(rest);
@@ -58,7 +57,8 @@ export const logout = (req, res) => {
     httpOnly: true,
     secure: true,
     sameSite: "none",
-    domain: "ai-enhanced-blog.onrender.com"
+    domain: "ai-enhanced-blog.onrender.com",
   });
+
   res.status(200).json("Logged out");
 };

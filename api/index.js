@@ -12,42 +12,56 @@ import authRouter from "./routes/auth.js";
 
 const app = express();
 
-// CORS — PRODUCTION SAFE
+/* ============================
+   PERMANENT CORS CONFIG
+   ============================ */
+
+const FRONTEND_URL = "https://blogpage-two-sigma.vercel.app"; // your stable domain
+
 app.use(cors({
-  origin: "https://blogpage-two-sigma.vercel.app",
+  origin: FRONTEND_URL,
   credentials: true
 }));
 
-// Must add these headers for Render/Vercel cookie handling
+// Required for cookies on Render + Vercel
 app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", FRONTEND_URL);
   res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Origin", "https://blogpage-two-sigma.vercel.app");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   next();
 });
+
+/* ============================
+   BASIC MIDDLEWARE
+   ============================ */
 
 app.use(express.json());
 app.use(cookieParser());
 
-// Cloudinary Config
+/* ============================
+   CLOUDINARY CONFIG
+   ============================ */
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Cloudinary Multer Storage
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: "blog_uploads",
+    folder: "blog_uploads"
   },
 });
 
 const upload = multer({ storage });
 
-// Upload Route
+/* ============================
+   UPLOAD ROUTE (CLOUDINARY)
+   ============================ */
+
 app.post("/api/upload", upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file received" });
 
@@ -56,13 +70,19 @@ app.post("/api/upload", upload.single("file"), (req, res) => {
   });
 });
 
-// Routes
+/* ============================
+   ROUTES
+   ============================ */
+
 app.use("/api/suggest", suggestionRouter);
 app.use("/api/posts", postsRouter);
 app.use("/api/users", userRouter);
 app.use("/api/auth", authRouter);
 
-// Start
+/* ============================
+   START SERVER
+   ============================ */
+
 app.listen(process.env.PORT || 8800, () => {
   console.log("Server running");
 });
