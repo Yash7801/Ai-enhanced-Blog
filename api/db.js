@@ -1,27 +1,67 @@
-import mysql from "mysql2/promise";
-import dotenv from "dotenv";
-dotenv.config();
+import { db } from "../db.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
-export const db = await mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: Number(process.env.DB_PORT),
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-  ssl: {
-    rejectUnauthorized: false
+// REGISTER
+export const register = async (req, res) => {
+  try {
+    const q = "SELECT * FROM users WHERE username = ? OR email = ?";
+    const [existing] = await db.query(q, [req.body.username, req.body.email]);
+
+    if (existing.length) return res.status(409).json("User already exists!");
+
+    const hashed = bcrypt.hashSync(req.body.password, 10);
+
+    const q2 = "INSERT INTO users(`username`,`email`,`password`) VALUES (?)";
+    const values = [req.body.username, req.body.email, hashed];
+
+    const [result] = await db.query(q2, [values]);
+
+    res.status(201).json({ id: result.insertId });
+  } catch (err) {
+    res.status(500).json(err);
   }
-});
+};
 
-// Test connection
-try {
-  const conn = await db.getConnection();
-  console.log("Connected to MySQL successfully!");
-  console.log("Connected to host:", process.env.DB_HOST);
-  conn.release();
-} catch (err) {
-  console.error("MySQL connection error:", err);
-}
+// LOGIN
+export const login = async (req, res) => {
+  try {
+    const q = "SELECT * FROM users WHERE username = ?";
+    const [users] = await db.query(q, [req.body.username]);
+
+    if (!users.length) return res.status(404).json("User not found!");
+
+    const user = users[0];
+    const isCorrect = bcrypt.compareSync(req.body.password, user.password);
+    if (!isCorrect) return res.status(400).json("Wrong credentials!");
+
+    // FIXED 🔥
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
+
+    const { password, ...rest } = user;
+
+    res.cookie("access_token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      domain: "ai-enhanced-blog.onrender.com",
+    });
+
+    res.status(200).json(rest);
+  } catch (err) {
+    console.log("LOGIN ERROR:", err);
+    res.status(500).json(err);
+  }
+};
+
+// LOGOUT
+export const logout = (req, res) => {
+  res.clearCookie("access_token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    domain: "ai-enhanced-blog.onrender.com",
+  });
+
+  res.status(200).json("Logged out");
+};
