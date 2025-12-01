@@ -35,27 +35,28 @@ export const login = async (req, res) => {
     const isCorrect = bcrypt.compareSync(req.body.password, user.password);
     if (!isCorrect) return res.status(400).json("Wrong credentials!");
 
-    // ✅ Use JWT secret from Railway (.env)
     const token = jwt.sign(
       { id: user.id },
-      process.env.JWT_SECRET_KEY,
+      process.env.JWT_SECRET_KEY,  // FIXED
       { expiresIn: "7d" }
     );
 
     const { password, ...rest } = user;
 
-    // ❗ NO CUSTOM DOMAIN → breaks cookies. REMOVE IT.
     res.cookie("access_token", token, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
+      path: "/",   // FIX ADDED
     });
 
     res.status(200).json(rest);
   } catch (err) {
+    console.error("LOGIN ERROR:", err);
     res.status(500).json(err);
   }
 };
+
 
 // LOGOUT
 export const logout = (req, res) => {
