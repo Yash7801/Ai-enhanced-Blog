@@ -18,8 +18,10 @@ app.use(cors({
     "https://blogpage-two-sigma.vercel.app",
     "http://localhost:5173"
   ],
+  methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
+
 
 app.use(express.json());
 app.use(cookieParser());
@@ -46,16 +48,16 @@ const upload = multer({ storage });
 
 // Upload Route (returns FULL Cloudinary URL)
 app.post("/api/upload", upload.single("file"), (req, res) => {
-  if (!req.file) {
-    // prevents 500 crash
-    return res.status(400).json({ error: "File not received" });
-  }
+  if (!req.file) return res.status(400).json({ error: "File not received" });
 
-  // CloudinaryStorage usually returns secure_url
-  res.status(200).json({
-    url: req.file.path || req.file.secure_url
-  });
+  const url =
+    req.file.path ||
+    req.file.secure_url ||
+    req.file.url;
+
+  res.status(200).json({ url });
 });
+
 
 
 // ROUTES
