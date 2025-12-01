@@ -1,5 +1,5 @@
 import express from "express";
-import axiosInstance from "axios";
+import axios from "axios";   // <-- CORRECT
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -10,7 +10,7 @@ router.post("/", async (req, res) => {
   const { text } = req.body;
 
   try {
-    const response = await axiosInstance.post(
+    const response = await axios.post(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         contents: [{ parts: [{ text: `Continue this blog naturally:\n\n${text}` }] }],

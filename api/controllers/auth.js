@@ -2,7 +2,9 @@ import { db } from "../db.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+// ---------------------------------------------
 // REGISTER
+// ---------------------------------------------
 export const register = async (req, res) => {
   try {
     const q = "SELECT * FROM users WHERE username = ? OR email = ?";
@@ -15,7 +17,7 @@ export const register = async (req, res) => {
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(req.body.password, salt);
 
-    const q2 = "INSERT INTO users(`username`,`email`,`password`) VALUES (?)";
+    const q2 = "INSERT INTO users(`username`, `email`, `password`) VALUES (?)";
     const values = [req.body.username, req.body.email, hashedPassword];
 
     const [result] = await db.query(q2, [values]);
@@ -31,7 +33,9 @@ export const register = async (req, res) => {
   }
 };
 
+// ---------------------------------------------
 // LOGIN
+// ---------------------------------------------
 export const login = async (req, res) => {
   try {
     const q = "SELECT * FROM users WHERE username = ?";
@@ -52,9 +56,12 @@ export const login = async (req, res) => {
     const token = jwt.sign({ id: data[0].id }, "jwtkey");
     const { password, ...other } = data[0];
 
+    // IMPORTANT: cookie must be secure + sameSite none for Vercel + Render
     res
       .cookie("access_token", token, {
         httpOnly: true,
+        secure: true,        // required for HTTPS
+        sameSite: "none",    // required for cross-site cookies
       })
       .status(200)
       .json(other);
@@ -64,13 +71,15 @@ export const login = async (req, res) => {
   }
 };
 
+// ---------------------------------------------
 // LOGOUT
+// ---------------------------------------------
 export const logout = (req, res) => {
   res
     .clearCookie("access_token", {
       httpOnly: true,
-      secure: false,
-      sameSite: "lax",
+      secure: true,        // MUST match login cookie
+      sameSite: "none",
     })
     .status(200)
     .json("User has been logged out.");
