@@ -48,6 +48,7 @@ export const login = async (req, res) => {
       httpOnly: true,
       secure: true,
       sameSite: "none",
+      domain: "ai-enhanced-blog.onrender.com",
       path: "/"
     });
 
@@ -65,6 +66,7 @@ export const logout = (req, res) => {
     httpOnly: true,
     secure: true,
     sameSite: "none",
+    domain: "ai-enhanced-blog.onrender.com",
     path: "/"
   });
 
