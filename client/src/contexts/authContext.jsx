@@ -12,13 +12,27 @@ export const AuthContextProvider = ({ children }) => {
          LOGIN
   ============================ */
   const login = async (inputs) => {
-    const res = await axiosInstance.post("/api/auth/login", inputs, {
-    });
 
-    // Backend returns user (without password)
-    setCurrentUser(res.data);
-    localStorage.setItem("user", JSON.stringify(res.data));
-  };
+  // ⭐ 1. Ask Chrome for Storage Access (required for third-party cookies)
+  if (document.requestStorageAccess) {
+    try {
+      await document.requestStorageAccess();
+      console.log("Storage access granted.");
+    } catch (err) {
+      console.log("Storage access denied:", err);
+    }
+  }
+
+  // ⭐ 2. Login → backend will set the cookie now
+  const res = await axiosInstance.post("/api/auth/login", inputs, {
+    withCredentials: true,
+  });
+
+  // ⭐ 3. Save user
+  setCurrentUser(res.data);
+  localStorage.setItem("user", JSON.stringify(res.data));
+};
+
 
   /* ============================
          LOGOUT
