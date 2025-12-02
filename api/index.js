@@ -14,24 +14,19 @@ import authRouter from "./routes/auth.js";
 const app = express();
 
 // ---------------------------------------------
-//  CORS CONFIG (Chrome + Vercel + Render SAFE)
+//  CORS (Express v5 SAFE — NO WILDCARDS)
 // ---------------------------------------------
 const FRONTEND_URL = "https://blogpage-two-sigma.vercel.app";
 
-const corsOptions = {
-  origin: FRONTEND_URL,
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  exposedHeaders: ["Set-Cookie"],
-  optionsSuccessStatus: 200,
-};
-
-// Apply global CORS
-app.use(cors(corsOptions));
-
-// ⭐ EXPRESS v5 SAFE PRE-FLIGHT: NO WILDCARD CRASH ⭐
-app.options("*", cors(corsOptions));   // <-- SAFE & REQUIRED
+app.use(
+  cors({
+    origin: FRONTEND_URL,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"], // OPTIONS auto-handled
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Set-Cookie"],
+  })
+);
 
 // ---------------------------------------------
 // JSON + Cookies
@@ -73,7 +68,7 @@ app.post("/api/upload", upload.single("file"), (req, res) => {
 });
 
 // ---------------------------------------------
-//  API ROUTES
+//  API ROUTES (ALL SAFE)
 // ---------------------------------------------
 app.use("/api/suggest", suggestionRouter);
 app.use("/api/posts", postsRouter);
@@ -81,14 +76,14 @@ app.use("/api/users", userRouter);
 app.use("/api/auth", authRouter);
 
 // ---------------------------------------------
-//  404 HANDLER (SAFE)
+// 404 HANDLER (Required by Render sometimes)
 // ---------------------------------------------
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
 
 // ---------------------------------------------
-//  SERVER START
+// START SERVER
 // ---------------------------------------------
 app.listen(process.env.PORT || 8800, () => {
   console.log("Server running...");
