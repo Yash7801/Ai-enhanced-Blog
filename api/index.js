@@ -13,30 +13,35 @@ import authRouter from "./routes/auth.js";
 
 const app = express();
 
-// ---------------------------------------------
-//  CORS (Express v5 SAFE — NO WILDCARDS)
-// ---------------------------------------------
+// --------------------------------------------------
+// TRUST PROXY (REQUIRED for Render + Cookies)
+// --------------------------------------------------
+app.set("trust proxy", 1);
+
+// --------------------------------------------------
+// CORS (FINAL + CORRECT)
+// --------------------------------------------------
 const FRONTEND_URL = "https://blogpage-two-sigma.vercel.app";
 
 app.use(
   cors({
     origin: FRONTEND_URL,
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"], // OPTIONS auto-handled
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     exposedHeaders: ["Set-Cookie"],
   })
 );
 
-// ---------------------------------------------
-// JSON + Cookies
-// ---------------------------------------------
+// --------------------------------------------------
+// BODY + COOKIES
+// --------------------------------------------------
 app.use(express.json());
 app.use(cookieParser());
 
-// ---------------------------------------------
-//  CLOUDINARY CONFIG
-// ---------------------------------------------
+// --------------------------------------------------
+// CLOUDINARY CONFIG
+// --------------------------------------------------
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -44,9 +49,9 @@ cloudinary.config({
   secure: true,
 });
 
-// ---------------------------------------------
-// MULTER + CLOUDINARY STORAGE
-// ---------------------------------------------
+// --------------------------------------------------
+// MULTER STORAGE
+// --------------------------------------------------
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
@@ -58,33 +63,28 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage });
 
+// --------------------------------------------------
 // UPLOAD ROUTE
+// --------------------------------------------------
 app.post("/api/upload", upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
 
   res.status(200).json({
-    url: req.file.path || req.file.secure_url,
+    url: req.file.secure_url || req.file.path,
   });
 });
 
-// ---------------------------------------------
-//  API ROUTES (ALL SAFE)
-// ---------------------------------------------
+// --------------------------------------------------
+// API ROUTES
+// --------------------------------------------------
 app.use("/api/suggest", suggestionRouter);
 app.use("/api/posts", postsRouter);
 app.use("/api/users", userRouter);
 app.use("/api/auth", authRouter);
 
-// ---------------------------------------------
-// 404 HANDLER (Required by Render sometimes)
-// ---------------------------------------------
-app.use((req, res) => {
-  res.status(404).json({ message: "Route not found" });
-});
-
-// ---------------------------------------------
-// START SERVER
-// ---------------------------------------------
+// --------------------------------------------------
+// SERVER START
+// --------------------------------------------------
 app.listen(process.env.PORT || 8800, () => {
-  console.log("Server running...");
+  console.log("Server running on port", process.env.PORT || 8800);
 });
