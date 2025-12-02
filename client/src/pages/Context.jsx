@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import axiosInstance from '../api';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import moment from 'moment';
 
 const Context = () => {
   const state = useLocation().state;
+  const navigate = useNavigate();
 
   const [value, setValue] = useState(state?.description || "");
   const [title, setTitle] = useState(state?.title || "");
@@ -16,24 +17,29 @@ const Context = () => {
   const [cat, setCat] = useState(state?.cat || "");
   const [showFullSuggestion, setShowFullSuggestion] = useState(false);
 
+  // NEW STATES
+  const [uploading, setUploading] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  // ⭐ NEW STATE FOR SUCCESS MESSAGE
+  const [successMsg, setSuccessMsg] = useState("");
+
   // --------------------------------------------------
-  // AI Suggestion (Optimized, Debounced, Anti-Spam)
+  // AI Suggestion
   // --------------------------------------------------
   useEffect(() => {
-    // prevent tiny input
     if (value.trim().length < 30) {
       setSuggestion("");
       return;
     }
 
-    // prevent backspace spam
     if (value.endsWith(" ")) return;
 
     clearTimeout(typingTimeout);
 
     const timeout = setTimeout(async () => {
       try {
-        // avoid duplicate suggestions
         if (suggestion && value.includes(suggestion.slice(0, 20))) return;
 
         const res = await axiosInstance.post("/api/suggest", { text: value });
@@ -49,13 +55,12 @@ const Context = () => {
       } catch (err) {
         console.log("AI suggest error:", err);
       }
-    }, 2500); // 2.5s debounce (perfect balance)
+    }, 2500);
 
     setTypingTimeout(timeout);
     return () => clearTimeout(timeout);
   }, [value]);
 
-  // Insert suggestion with TAB
   const handleKeyDown = (e) => {
     if (e.key === "Tab" && suggestion) {
       e.preventDefault();
@@ -65,12 +70,14 @@ const Context = () => {
   };
 
   // --------------------------------------------------
-  // Image Upload using Cloudinary
+  // Image Upload
   // --------------------------------------------------
   const upload = async () => {
     if (!file) return "";
 
     try {
+      setUploading(true);
+
       const formData = new FormData();
       formData.append("file", file);
 
@@ -82,6 +89,10 @@ const Context = () => {
       return res.data.url;
     } catch (err) {
       console.log("Upload error:", err);
+      setErrorMsg("Image upload failed. Try again.");
+      return null;
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -90,39 +101,107 @@ const Context = () => {
   // --------------------------------------------------
   const handleClick = async (e) => {
     e.preventDefault();
+    setErrorMsg("");
+    setSuccessMsg("");
+
+    // VALIDATION
+    if (!title.trim()) {
+      setErrorMsg("Title is required.");
+      return;
+    }
+    if (!value.trim()) {
+      setErrorMsg("Description is required.");
+      return;
+    }
+    if (!cat.trim()) {
+      setErrorMsg("Category is required.");
+      return;
+    }
+
+    setPublishing(true);
+
     const imgUrl = await upload();
+    if (imgUrl === null && file) {
+      setPublishing(false);
+      return;
+    }
 
     try {
-      state
-        ? await axiosInstance.put(
-            `/api/posts/${state.id}`,
-            {
-              title,
-              description: value,
-              img: file ? imgUrl : "",
-              cat,
-            },
-            { withCredentials: true }
-          )
-        : await axiosInstance.post(
-            "/api/posts",
-            {
-              title,
-              description: value,
-              img: file ? imgUrl : "",
-              date: moment(Date.now()).format("YYYY-MM-DD HH:mm:ss"),
-              cat,
-            },
-            { withCredentials: true }
-          );
+      if (state) {
+        await axiosInstance.put(
+          `/api/posts/${state.id}`,
+          {
+            title,
+            description: value,
+            img: file ? imgUrl : state.img,
+            cat,
+          },
+          { withCredentials: true }
+        );
+      } else {
+        await axiosInstance.post(
+          "/api/posts",
+          {
+            title,
+            description: value,
+            img: file ? imgUrl : "",
+            date: moment(Date.now()).format("YYYY-MM-DD HH:mm:ss"),
+            cat,
+          },
+          { withCredentials: true }
+        );
+      }
+
+      // ⭐ SUCCESS — Show message then redirect
+      setSuccessMsg("🎉 Your post has been published!");
+
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
+
     } catch (err) {
       console.log(err);
+      setErrorMsg("Failed to publish post. Please try again.");
+    } finally {
+      setPublishing(false);
     }
   };
 
   return (
     <div className="context">
+
+      {/* SUCCESS POPUP */}
+      {successMsg && (
+        <div style={{
+          backgroundColor: "#d4edda",
+          padding: "10px",
+          color: "#155724",
+          borderRadius: "6px",
+          marginBottom: "10px",
+          fontWeight: "bold"
+        }}>
+          {successMsg}
+        </div>
+      )}
+
+      {/* ERROR POPUP */}
+      {errorMsg && (
+        <div style={{
+          backgroundColor: "#ffcccc",
+          padding: "10px",
+          color: "#900",
+          borderRadius: "6px",
+          marginBottom: "10px",
+          fontWeight: "bold"
+        }}>
+          {errorMsg}
+        </div>
+      )}
+
       <div className="content">
+        <label>
+          Title <span style={{ color: "red" }}>*</span>
+        </label>
         <input
           type="text"
           value={title}
@@ -130,7 +209,10 @@ const Context = () => {
           onChange={(e) => setTitle(e.target.value)}
         />
 
-        {/* Editor */}
+        <label>
+          Description <span style={{ color: "red" }}>*</span>
+        </label>
+
         <div className="editorContainer" onKeyDown={handleKeyDown}>
           <ReactQuill
             className="editor"
@@ -140,7 +222,7 @@ const Context = () => {
           />
         </div>
 
-        {/* AI Suggestion Box */}
+        {/* AI Suggestion */}
         {suggestion && (
           <div
             style={{
@@ -160,14 +242,11 @@ const Context = () => {
             {showFullSuggestion
               ? suggestion
               : suggestion.split(" ").slice(0, 40).join(" ") + "..."}
+
             {suggestion.split(" ").length > 40 && (
               <span
                 onClick={() => setShowFullSuggestion(!showFullSuggestion)}
-                style={{
-                  color: "teal",
-                  cursor: "pointer",
-                  marginLeft: "5px",
-                }}
+                style={{ color: "teal", cursor: "pointer", marginLeft: "5px" }}
               >
                 {showFullSuggestion ? "Show less ▲" : "Show more ▼"}
               </span>
@@ -179,12 +258,8 @@ const Context = () => {
       <div className="menu">
         <div className="item">
           <h1>Publish</h1>
-          <span>
-            <b>Status:</b> Draft
-          </span>
-          <span>
-            <b>Visibility:</b> Public
-          </span>
+          <span><b>Status:</b> Draft</span>
+          <span><b>Visibility:</b> Public</span>
 
           <input
             style={{ display: "none" }}
@@ -196,14 +271,33 @@ const Context = () => {
             Upload Image
           </label>
 
+          {uploading && (
+            <p style={{ color: "teal", marginTop: "10px" }}>
+              ⏳ Uploading image...
+            </p>
+          )}
+
           <div className="buttons">
-            <button>Save as a draft</button>
-            <button onClick={handleClick}>Publish</button>
+            <button>Save as draft</button>
+
+            <button
+              onClick={handleClick}
+              disabled={uploading || publishing}
+              style={{
+                opacity: (uploading || publishing) ? 0.6 : 1,
+                cursor: (uploading || publishing) ? "not-allowed" : "pointer"
+              }}
+            >
+              {publishing ? "Publishing..." : "Publish"}
+            </button>
           </div>
         </div>
 
         <div className="item">
-          <h1>Category</h1>
+          <h1>
+            Category <span style={{ color: "red" }}>*</span>
+          </h1>
+
           {["art", "science", "technology", "Cinema", "design", "food"].map(
             (c) => (
               <div className="cat" key={c}>
