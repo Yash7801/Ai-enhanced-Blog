@@ -14,7 +14,7 @@ import authRouter from "./routes/auth.js";
 const app = express();
 
 // ---------------------------------------------
-//  CORS CONFIG (Chrome + Vercel safe)
+//  CORS CONFIG (Chrome + Vercel + Render SAFE)
 // ---------------------------------------------
 const FRONTEND_URL = "https://blogpage-two-sigma.vercel.app";
 
@@ -24,14 +24,14 @@ const corsOptions = {
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   exposedHeaders: ["Set-Cookie"],
-  optionsSuccessStatus: 200, // ⭐ For Chrome preflight
+  optionsSuccessStatus: 200,
 };
 
-// Main CORS middleware
+// Apply global CORS
 app.use(cors(corsOptions));
 
-// Preflight for any /api/... route
-app.options("/api/:path*", cors(corsOptions));   // ⭐ Correct wildcard syntax (Express v5 safe)
+// ⭐ EXPRESS v5 SAFE PRE-FLIGHT: NO WILDCARD CRASH ⭐
+app.options("*", cors(corsOptions));   // <-- SAFE & REQUIRED
 
 // ---------------------------------------------
 // JSON + Cookies
@@ -66,7 +66,10 @@ const upload = multer({ storage });
 // UPLOAD ROUTE
 app.post("/api/upload", upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-  res.status(200).json({ url: req.file.path || req.file.secure_url });
+
+  res.status(200).json({
+    url: req.file.path || req.file.secure_url,
+  });
 });
 
 // ---------------------------------------------
@@ -78,7 +81,7 @@ app.use("/api/users", userRouter);
 app.use("/api/auth", authRouter);
 
 // ---------------------------------------------
-//  CATCH-ALL 404 (No crash)
+//  404 HANDLER (SAFE)
 // ---------------------------------------------
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
