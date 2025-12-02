@@ -28,6 +28,15 @@ const Login = () => {
     e.preventDefault()
     try{
       await login(inputs);
+      if (document.requestStorageAccess) {
+  try {
+    await document.requestStorageAccess();
+    console.log("Storage access granted!");
+  } catch (err) {
+    console.log("Storage access denied:", err);
+  }
+}
+
       navigate("/",{replace:true});
     } catch(err){
       setErr(err.response.data);

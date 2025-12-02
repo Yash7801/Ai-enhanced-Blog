@@ -26,7 +26,7 @@ const FRONTEND_URL = "https://blogpage-two-sigma.vercel.app";
 
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin: [FRONTEND_URL],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -36,10 +36,11 @@ app.use(
 
 
 // Global preflight handler (SAFE)
-app.options(/.*/, cors({
-  origin: "https://blogpage-two-sigma.vercel.app",
+app.options("*", cors({
+  origin: [FRONTEND_URL],
   credentials: true
 }));
+
 
 // --------------------------------------------------
 // BODY + COOKIES
