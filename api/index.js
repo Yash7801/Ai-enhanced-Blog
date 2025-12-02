@@ -36,7 +36,7 @@ app.use(
 
 
 // Global preflight handler (SAFE)
-app.options("*", cors({
+app.options("/.*", cors({
   origin: [FRONTEND_URL],
   credentials: true
 }));
