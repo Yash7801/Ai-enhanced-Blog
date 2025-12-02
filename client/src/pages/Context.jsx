@@ -34,8 +34,6 @@ const Context = () => {
       return;
     }
 
-    if (value.endsWith(" ")) return;
-
     clearTimeout(typingTimeout);
 
     const timeout = setTimeout(async () => {
@@ -59,7 +57,7 @@ const Context = () => {
 
     setTypingTimeout(timeout);
     return () => clearTimeout(timeout);
-  }, [value]);
+  }, [value,typingTimeout]);
 
   const handleKeyDown = (e) => {
     if (e.key === "Tab" && suggestion) {
