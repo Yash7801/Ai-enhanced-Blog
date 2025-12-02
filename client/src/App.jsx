@@ -9,6 +9,9 @@ import Footer from "./components/Footer";
 import "./style.scss";
 import React from "react";
 
+// ⭐ NEW IMPORT
+import ProtectedRoute from "./components/ProtectedRoute";
+
 const Layout = () => {
   return (
     <>
@@ -22,7 +25,12 @@ const Layout = () => {
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Layout />,
+    // ⭐ WRAP Layout with ProtectedRoute
+    element: (
+      <ProtectedRoute>
+        <Layout />
+      </ProtectedRoute>
+    ),
     children: [
       { path: "/", element: <Home /> },
       { path: "/context", element: <Context /> },

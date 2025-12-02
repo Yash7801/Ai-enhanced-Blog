@@ -18,6 +18,7 @@ export const AuthContextProvider = ({ children }) => {
 
     // Backend returns user (without password)
     setCurrentUser(res.data);
+    localStorage.setItem("user", JSON.stringify(res.data));
   };
 
   /* ============================

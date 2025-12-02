@@ -14,34 +14,28 @@ import authRouter from "./routes/auth.js";
 const app = express();
 
 // ---------------------------------------------
-//  CORS (THIS IS THE ONLY CORRECT CONFIG)
-// ---------------------------------------------
-// ---------------------------------------------
-//  CORS (THIS IS THE ONLY CORRECT CONFIG)
+//  CORS CONFIG (Chrome + Vercel safe)
 // ---------------------------------------------
 const FRONTEND_URL = "https://blogpage-two-sigma.vercel.app";
 
-app.use(cors({
-  origin: "https://blogpage-two-sigma.vercel.app",
+const corsOptions = {
+  origin: FRONTEND_URL,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  exposedHeaders: ["Set-Cookie"],    // ⭐ IMPORTANT FIX
-}));
+  exposedHeaders: ["Set-Cookie"],
+  optionsSuccessStatus: 200, // ⭐ For Chrome preflight
+};
 
+// Main CORS middleware
+app.use(cors(corsOptions));
 
-// ⭐ IMPORTANT: PRE-FLIGHT HANDLER ⭐
-app.options("*", cors({
-  origin: "https://blogpage-two-sigma.vercel.app",
-  credentials: true,
-  exposedHeaders: ["Set-Cookie"],   // ⭐ VERY IMPORTANT
-}));
-
+// Preflight for any /api/... route
+app.options("/api/:path*", cors(corsOptions));   // ⭐ Correct wildcard syntax (Express v5 safe)
 
 // ---------------------------------------------
 // JSON + Cookies
-// --------------------------------------------
-
+// ---------------------------------------------
 app.use(express.json());
 app.use(cookieParser());
 
@@ -72,10 +66,7 @@ const upload = multer({ storage });
 // UPLOAD ROUTE
 app.post("/api/upload", upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-
-  res.status(200).json({
-    url: req.file.path || req.file.secure_url,
-  });
+  res.status(200).json({ url: req.file.path || req.file.secure_url });
 });
 
 // ---------------------------------------------
@@ -87,8 +78,15 @@ app.use("/api/users", userRouter);
 app.use("/api/auth", authRouter);
 
 // ---------------------------------------------
+//  CATCH-ALL 404 (No crash)
+// ---------------------------------------------
+app.use((req, res) => {
+  res.status(404).json({ message: "Route not found" });
+});
+
+// ---------------------------------------------
 //  SERVER START
 // ---------------------------------------------
 app.listen(process.env.PORT || 8800, () => {
-  console.log("Server running");
+  console.log("Server running...");
 });
