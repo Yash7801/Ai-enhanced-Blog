@@ -13,7 +13,6 @@ export const AuthContextProvider = ({ children }) => {
   ============================ */
   const login = async (inputs) => {
     const res = await axiosInstance.post("/api/auth/login", inputs, {
-      withCredentials: true,
     });
 
     // Backend returns user (without password)
