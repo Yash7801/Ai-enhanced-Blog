@@ -24,6 +24,7 @@ export const register = async (req, res) => {
 };
 
 // LOGIN
+// LOGIN
 export const login = async (req, res) => {
   try {
     const q = "SELECT * FROM users WHERE username = ?";
@@ -37,7 +38,7 @@ export const login = async (req, res) => {
 
     const token = jwt.sign(
       { id: user.id },
-      process.env.JWT_SECRET_KEY,  // FIXED
+      process.env.JWT_SECRET_KEY,
       { expiresIn: "7d" }
     );
 
@@ -47,7 +48,8 @@ export const login = async (req, res) => {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      path: "/",   // FIX ADDED
+      domain: "ai-enhanced-blog.onrender.com",   // ⭐ REQUIRED FIX
+      path: "/"
     });
 
     res.status(200).json(rest);
@@ -64,8 +66,13 @@ export const logout = (req, res) => {
     httpOnly: true,
     secure: true,
     sameSite: "none",
-    path:"/",
+    domain: "ai-enhanced-blog.onrender.com",   // ⭐ REQUIRED FIX
+    path: "/"
   });
 
-  res.status(200).json("Logged out");
+  res.status(200).json("You are logged out");
 };
+
+
+
+
