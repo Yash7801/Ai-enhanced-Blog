@@ -16,7 +16,8 @@ const app = express();
 // --------------------------------------------------
 // TRUST PROXY (REQUIRED for Render + Cookies)
 // --------------------------------------------------
-app.set("trust proxy", 1);
+app.set("trust proxy", true);
+// Fix Chrome treating cookie as 3rd-party
 
 // --------------------------------------------------
 // CORS (FINAL + CORRECT)
@@ -32,6 +33,13 @@ app.use(
     exposedHeaders: ["Set-Cookie"],
   })
 );
+
+
+// Global preflight handler (SAFE)
+app.options(/.*/, cors({
+  origin: "https://blogpage-two-sigma.vercel.app",
+  credentials: true
+}));
 
 // --------------------------------------------------
 // BODY + COOKIES
