@@ -12,8 +12,12 @@ An **AI-powered blogging platform** built with **React, Node.js, Express, and My
 -->Tech Stack
 **Frontend:** React, React Router, React Quill, Axios, SCSS  
 **Backend:** Node.js, Express.js  
+****Extra technologies:- Multer , Cloudinary, Postman (for testing), CORS**
 **Database:** MySQL  
-**AI Integration:** Gemini API (for intelligent content suggestions)
+**Deployment** :- Vercel (frontend), Render (backend), Railway (Database).
+**AI Integration:** Groq API (for intelligent content suggestions)
+
+Note :- Wait for 30 second and then do hard refresh so it wakes up render, "KINDLY USE MICROSOFT EDGE TO RUN THIS APP".
 
 For Quick Start
 ```bash
