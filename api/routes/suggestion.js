@@ -9,19 +9,17 @@ const router = express.Router();
 // Initialize Groq client
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-// Model to use
-const MODEL = "llama3-8b-8192";
+// ⭐ Supported and FREE model
+const MODEL = "mixtral-8x7b-32768";
 
 router.post("/", async (req, res) => {
   const { text } = req.body;
 
-  // Missing API key
   if (!process.env.GROQ_API_KEY) {
     console.log("❌ Missing GROQ_API_KEY");
     return res.status(200).json({ suggestion: "" });
   }
 
-  // Empty text
   if (!text || text.trim().length === 0) {
     return res.status(200).json({ suggestion: "" });
   }
@@ -35,30 +33,27 @@ router.post("/", async (req, res) => {
         {
           role: "system",
           content:
-            "Continue the user’s paragraph using 2–3 natural human sentences. Do NOT output blank text."
+            "Continue the blog paragraph naturally in 2–3 human-sounding sentences."
         },
         {
           role: "user",
           content: text
         }
       ],
-      max_tokens: 120,
+      max_tokens: 150,
       temperature: 0.7
     });
 
-    // ⭐ ADDED: LOG RAW GROQ RESPONSE
     console.log("🚀 RAW GROQ RESPONSE:", JSON.stringify(response, null, 2));
 
-    const suggestion =
-      response?.choices?.[0]?.message?.content?.trim() || "";
+    const suggestion = response?.choices?.[0]?.message?.content?.trim() || "";
 
-    // ⭐ ADDED: LOG FINAL SUGGESTION
     console.log("✨ FINAL SUGGESTION:", suggestion);
 
     return res.status(200).json({ suggestion });
 
   } catch (err) {
-    console.error("🔥 GROQ ERROR:", err?.message || err);
+    console.error("🔥 GROQ ERROR:", err?.response?.data || err);
     return res.status(200).json({ suggestion: "" });
   }
 });
