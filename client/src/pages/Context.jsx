@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import axiosInstance from '../api';
@@ -13,7 +13,6 @@ const Context = () => {
   const [title, setTitle] = useState(state?.title || "");
   const [file, setFile] = useState(null);
   const [suggestion, setSuggestion] = useState("");
-  const [typingTimeout, setTypingTimeout] = useState(null);
   const [cat, setCat] = useState(state?.cat || "");
   const [showFullSuggestion, setShowFullSuggestion] = useState(false);
 
@@ -25,8 +24,11 @@ const Context = () => {
   // ⭐ NEW STATE FOR SUCCESS MESSAGE
   const [successMsg, setSuccessMsg] = useState("");
 
+  // ⭐ FIXED DEBOUNCE REF (instead of broken typingTimeout state)
+  const typingRef = useRef(null);
+
   // --------------------------------------------------
-  // AI Suggestion
+  // AI Suggestion (Fixed Version)
   // --------------------------------------------------
   useEffect(() => {
     if (value.trim().length < 30) {
@@ -34,12 +36,10 @@ const Context = () => {
       return;
     }
 
-    clearTimeout(typingTimeout);
+    if (typingRef.current) clearTimeout(typingRef.current);
 
-    const timeout = setTimeout(async () => {
+    typingRef.current = setTimeout(async () => {
       try {
-        if (suggestion && value.includes(suggestion.slice(0, 20))) return;
-
         const res = await axiosInstance.post("/api/suggest", { text: value });
 
         if (!res.data.suggestion) return;
@@ -55,9 +55,8 @@ const Context = () => {
       }
     }, 2500);
 
-    setTypingTimeout(timeout);
-    return () => clearTimeout(timeout);
-  }, [value,typingTimeout]);
+    return () => clearTimeout(typingRef.current);
+  }, [value]);
 
   const handleKeyDown = (e) => {
     if (e.key === "Tab" && suggestion) {
@@ -102,7 +101,6 @@ const Context = () => {
     setErrorMsg("");
     setSuccessMsg("");
 
-    // VALIDATION
     if (!title.trim()) {
       setErrorMsg("Title is required.");
       return;
@@ -150,7 +148,6 @@ const Context = () => {
         );
       }
 
-      // ⭐ SUCCESS — Show message then redirect
       setSuccessMsg("🎉 Your post has been published!");
 
       setTimeout(() => {
