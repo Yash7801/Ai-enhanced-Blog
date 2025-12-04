@@ -9,7 +9,7 @@ const router = express.Router();
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 // ⭐ WORKING MODEL (Dec 2025)
-const MODEL = "gemma2-9b-it";
+const MODEL = "llama-3.1-8b-instant";
 
 router.post("/", async (req, res) => {
   const { text } = req.body;
