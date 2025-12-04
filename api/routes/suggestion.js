@@ -1,24 +1,27 @@
 import express from "express";
-import axios from "axios";
 import dotenv from "dotenv";
+import Groq from "groq-sdk";
 
 dotenv.config();
 
 const router = express.Router();
 
-// ⭐ Correct working model
-const MODEL = "gemini-1.5-flash";
+// Initialize Groq client
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+// Model to use
+const MODEL = "llama3-8b-8192";
 
 router.post("/", async (req, res) => {
   const { text } = req.body;
 
-  // No API key = no suggestion
-  if (!process.env.GEMINI_API_KEY) {
-    console.log("❌ Missing GEMINI_API_KEY");
+  // Missing API key
+  if (!process.env.GROQ_API_KEY) {
+    console.log("❌ Missing GROQ_API_KEY");
     return res.status(200).json({ suggestion: "" });
   }
 
-  // No input given
+  // Empty text
   if (!text || text.trim().length === 0) {
     return res.status(200).json({ suggestion: "" });
   }
@@ -26,30 +29,32 @@ router.post("/", async (req, res) => {
   try {
     console.log("📩 Suggestion request received...");
 
-    // ⭐ Correct endpoint (v1)
-    const url = `https://generativelanguage.googleapis.com/v1/models/${MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`;
-
-    const response = await axios.post(url, {
-      contents: [
+    const response = await groq.chat.completions.create({
+      model: MODEL,
+      messages: [
         {
-          parts: [
-            {
-              text: `Continue this blog in 2–3 natural human sentences:\n\n${text}`
-            }
-          ]
+          role: "system",
+          content:
+            "You are an assistant that continues blog writing. Respond with 2-3 natural human sentences only."
+        },
+        {
+          role: "user",
+          content: text
         }
-      ]
+      ],
+      max_tokens: 120,
+      temperature: 0.7
     });
 
     const suggestion =
-      response.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+      response?.choices?.[0]?.message?.content?.trim() || "";
 
     console.log("✨ Suggestion generated:", suggestion);
 
     return res.status(200).json({ suggestion });
 
   } catch (err) {
-    console.error("🔥 GEMINI ERROR:", err.response?.data || err.message);
+    console.error("🔥 GROQ ERROR:", err?.message || err);
     return res.status(200).json({ suggestion: "" });
   }
 });
