@@ -6,11 +6,10 @@ dotenv.config();
 
 const router = express.Router();
 
-// Initialize Groq client
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-// ⭐ Supported and FREE model
-const MODEL = "mixtral-8x7b-32768";
+// ⭐ WORKING MODEL (Dec 2025)
+const MODEL = "gemma2-9b-it";
 
 router.post("/", async (req, res) => {
   const { text } = req.body;
@@ -33,7 +32,7 @@ router.post("/", async (req, res) => {
         {
           role: "system",
           content:
-            "Continue the blog paragraph naturally in 2–3 human-sounding sentences."
+            "Continue the user's blog paragraph naturally in 2–3 human-like sentences."
         },
         {
           role: "user",
@@ -46,7 +45,8 @@ router.post("/", async (req, res) => {
 
     console.log("🚀 RAW GROQ RESPONSE:", JSON.stringify(response, null, 2));
 
-    const suggestion = response?.choices?.[0]?.message?.content?.trim() || "";
+    const suggestion =
+      response?.choices?.[0]?.message?.content?.trim() || "";
 
     console.log("✨ FINAL SUGGESTION:", suggestion);
 
