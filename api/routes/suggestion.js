@@ -35,7 +35,7 @@ router.post("/", async (req, res) => {
         {
           role: "system",
           content:
-            "You are an assistant that continues blog writing. Respond with 2-3 natural human sentences only."
+            "Continue the user’s paragraph using 2–3 natural human sentences. Do NOT output blank text."
         },
         {
           role: "user",
@@ -46,10 +46,14 @@ router.post("/", async (req, res) => {
       temperature: 0.7
     });
 
+    // ⭐ ADDED: LOG RAW GROQ RESPONSE
+    console.log("🚀 RAW GROQ RESPONSE:", JSON.stringify(response, null, 2));
+
     const suggestion =
       response?.choices?.[0]?.message?.content?.trim() || "";
 
-    console.log("✨ Suggestion generated:", suggestion);
+    // ⭐ ADDED: LOG FINAL SUGGESTION
+    console.log("✨ FINAL SUGGESTION:", suggestion);
 
     return res.status(200).json({ suggestion });
 
