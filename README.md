@@ -7,7 +7,7 @@ An **AI-powered blogging platform** built with **React, Node.js, Express, and My
 - 📝 **Rich Text Editor** – Built using React Quill for a modern writing experience  
 - 🔐 **User Authentication** – Login, register, and logout with JWT + cookies  
 - 💾 **MySQL Database** – Secure and efficient data storage  
-- 🎨 **Clean UI** – Styled with SCSS
+- 🎨 **Clean UI** – Styled with SaSS
 
 -->Tech Stack
 **Frontend:** React, React Router, React Quill, Axios, SCSS  
