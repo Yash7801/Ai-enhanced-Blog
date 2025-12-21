@@ -14,7 +14,7 @@ An **AI-powered blogging platform** built with **React, Node.js, Express, and My
 **Backend:** Node.js, Express.js  
 ****Extra technologies:- Multer , Cloudinary, Postman (for testing), CORS**
 **Database:** MySQL  
-**Deployment** :- Vercel (frontend), Render (backend), Railway (Database).
+**Deployment** :- Vercel (frontend), Render (backend), Aiven (Database).
 **AI Integration:** Groq API (for intelligent content suggestions)
 
 Note :- Wait for 30 second and then do hard refresh so it wakes up render, "KINDLY USE MICROSOFT EDGE TO RUN THIS APP".
