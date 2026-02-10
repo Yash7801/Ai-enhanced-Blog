@@ -14,17 +14,10 @@ const Login = () => {
   });
 
   const [err, setErr] = React.useState(null);
-  const [countdown, setCountdown] = React.useState(30);
   const navigate = useNavigate();
 
   const { login } = useContext(AuthContext);
 
-  React.useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [countdown]);
 
   const handleChange = (e) => {
     setInputs((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -49,16 +42,7 @@ const Login = () => {
     }
   };
 
-  if (countdown > 0) {
-    return (
-      <div className="auth">
-        <div className="loading">
-          <h1>Please wait for the app to load...</h1>
-          <p>Due to Render's free tier cold start, it may take up to {countdown} seconds.</p>
-        </div>
-      </div>
-    );
-  }
+  
 
   return (
     <div className="auth">
