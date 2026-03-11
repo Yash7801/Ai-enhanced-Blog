@@ -73,6 +73,11 @@ app.use("/api/posts", postsRouter);
 app.use("/api/users", userRouter);
 app.use("/api/auth", authRouter);
 
+// Health check for UptimeRobot
+app.get("/", (req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 app.listen(process.env.PORT || 8800, () => {
   console.log("Server running on port", process.env.PORT || 8800);
 });
