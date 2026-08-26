@@ -38,7 +38,8 @@ const Login = () => {
 
       navigate("/", { replace: true });
     } catch (err) {
-      setErr(err.response.data);
+      const errData = err.response?.data;
+      setErr(typeof errData === "string" ? errData : errData?.message || "Login failed. Please try again.");
     }
   };
 
