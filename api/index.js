@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
+import { requireAuth } from "./utils/auth.js";
 
 // Routes
 import suggestionRouter from "./routes/suggestion.js";
@@ -65,7 +66,7 @@ const upload = multer({
   },
 });
 
-app.post("/api/upload", upload.single("file"), (req, res) => {
+app.post("/api/upload", requireAuth, upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ message: "Choose an image to upload." });
 
   return res.status(200).json({
@@ -74,7 +75,7 @@ app.post("/api/upload", upload.single("file"), (req, res) => {
 });
 
 
-app.use("/api/suggest", suggestionRouter);
+app.use("/api/suggest", requireAuth, suggestionRouter);
 app.use("/api/posts", postsRouter);
 app.use("/api/users", userRouter);
 app.use("/api/auth", authRouter);
@@ -93,6 +94,12 @@ app.use((err, _req, res, _next) => {
   }
   if (err?.message === "Only JPG, PNG, and WEBP images are supported.") {
     return res.status(400).json({ message: err.message });
+  }
+  if (err?.type === "entity.too.large") {
+    return res.status(413).json({ message: "That request is too large." });
+  }
+  if (err?.status >= 400 && err.status < 500) {
+    return res.status(err.status).json({ message: "The request could not be understood." });
   }
   console.error("REQUEST ERROR:", err);
   return res.status(500).json({ message: "The request could not be completed." });
