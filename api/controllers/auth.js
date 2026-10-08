@@ -1,76 +1,84 @@
 import { db } from "../db.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { sessionCookieOptions } from "../utils/sessionCookie.js";
 
-// REGISTER
+function isValidCredentials(username, password) {
+  return typeof username === "string"
+    && username.trim().length > 0
+    && username.trim().length <= 50
+    && typeof password === "string"
+    && password.length >= 8
+    && Buffer.byteLength(password, "utf8") <= 72;
+}
+
 export const register = async (req, res) => {
-  try {
-    const q = "SELECT * FROM users WHERE username = ? OR email = ?";
-    const [existing] = await db.query(q, [req.body.username, req.body.email]);
+  const username = typeof req.body?.username === "string" ? req.body.username.trim() : "";
+  const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  const password = req.body?.password;
 
-    if (existing.length) return res.status(409).json("User already exists!");
-
-    const hashed = bcrypt.hashSync(req.body.password, 10);
-
-    const q2 = "INSERT INTO users(`username`,`email`,`password`) VALUES (?)";
-    const values = [req.body.username, req.body.email, hashed];
-
-    const [result] = await db.query(q2, [values]);
-
-    res.status(201).json({ id: result.insertId });
-  } catch (err) {
-    res.status(500).json(err);
+  if (!isValidCredentials(username, password)) {
+    return res.status(400).json({ message: "Use a username of 1–50 characters and a password of 8–72 bytes." });
   }
-};
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ message: "Enter a valid email address." });
+  }
 
-// LOGIN
-// LOGIN
-export const login = async (req, res) => {
   try {
-    const q = "SELECT * FROM users WHERE username = ?";
-    const [users] = await db.query(q, [req.body.username]);
-
-    if (!users.length) return res.status(404).json("User not found!");
-
-    const user = users[0];
-    const isCorrect = bcrypt.compareSync(req.body.password, user.password);
-    if (!isCorrect) return res.status(400).json("Wrong credentials!");
-
-    const token = jwt.sign(
-      { id: user.id },
-      process.env.JWT_SECRET_KEY,
-      { expiresIn: "7d" }
+    const [existing] = await db.query(
+      "SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1",
+      [username, email],
     );
 
-    const { password, ...rest } = user;
+    if (existing.length) return res.status(409).json({ message: "That username or email is already registered." });
 
-    res.cookie("access_token", token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      path: "/"
-    });
+    const hashed = await bcrypt.hash(password, 12);
+    const [result] = await db.query(
+      "INSERT INTO users(`username`,`email`,`password`) VALUES (?)",
+      [[username, email, hashed]],
+    );
 
-    res.status(200).json(rest);
+    return res.status(201).json({ id: result.insertId });
   } catch (err) {
-    console.error("LOGIN ERROR:", err);
-    res.status(500).json(err);
+    if (err?.code === "ER_DUP_ENTRY") {
+      return res.status(409).json({ message: "That username or email is already registered." });
+    }
+    console.error("REGISTER ERROR:", err);
+    return res.status(500).json({ message: "Registration is temporarily unavailable." });
   }
 };
 
+export const login = async (req, res) => {
+  const username = typeof req.body?.username === "string" ? req.body.username.trim() : "";
+  const password = req.body?.password;
 
-// LOGOUT
-export const logout = (req, res) => {
-  res.clearCookie("access_token", {
-    httpOnly: true,
-    secure: true,
-    sameSite: "none",
-    path: "/"
-  });
+  if (!username || username.length > 50 || typeof password !== "string" || !password.length) {
+    return res.status(400).json({ message: "Enter your username and password." });
+  }
+  if (!process.env.JWT_SECRET_KEY) {
+    console.error("LOGIN ERROR: JWT_SECRET_KEY is not configured.");
+    return res.status(500).json({ message: "Sign in is temporarily unavailable." });
+  }
 
-  res.status(200).json("You are logged out");
+  try {
+    const [users] = await db.query("SELECT * FROM users WHERE username = ? LIMIT 1", [username]);
+    const user = users[0];
+    const isCorrect = user && await bcrypt.compare(password, user.password);
+
+    if (!isCorrect) return res.status(401).json({ message: "Incorrect username or password." });
+
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET_KEY, { expiresIn: "7d" });
+    const { password: _password, ...safeUser } = user;
+
+    res.cookie("access_token", token, sessionCookieOptions(req));
+    return res.status(200).json(safeUser);
+  } catch (err) {
+    console.error("LOGIN ERROR:", err);
+    return res.status(500).json({ message: "Sign in is temporarily unavailable." });
+  }
 };
 
-
-
-
+export const logout = (req, res) => {
+  res.clearCookie("access_token", sessionCookieOptions(req));
+  return res.status(200).json({ message: "You are signed out." });
+};
