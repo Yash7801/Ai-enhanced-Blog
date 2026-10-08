@@ -470,9 +470,9 @@ h1 em, h2 em {
 
 .story-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 34px;
-  row-gap: 58px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: 30px;
+  row-gap: 52px;
   padding-top: 34px;
   border-top: 1px solid var(--line);
 }
@@ -488,8 +488,8 @@ h1 em, h2 em {
 .story-card-featured {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: 1.18fr .82fr;
-  gap: clamp(28px, 5vw, 66px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(28px, 5vw, 60px);
   align-items: center;
   padding-bottom: 30px;
   border-bottom: 1px solid var(--line);
@@ -504,7 +504,7 @@ h1 em, h2 em {
 .story-image {
   display: block;
   width: 100%;
-  aspect-ratio: 1.55 / 1;
+  aspect-ratio: 16 / 10;
   object-fit: cover;
   transition: transform .55s cubic-bezier(.2, .65, .3, 1);
 }
@@ -518,7 +518,7 @@ h1 em, h2 em {
   place-items: center;
   color: #d0c9b9;
   font-family: var(--serif);
-  font-size: 70px;
+  font-size: 54px;
   font-style: italic;
 }
 
@@ -538,9 +538,9 @@ h1 em, h2 em {
 }
 
 .story-copy h2 {
-  margin: 16px 0 12px;
+  margin: 14px 0 10px;
   font-family: var(--serif);
-  font-size: clamp(27px, 3.1vw, 40px);
+  font-size: clamp(24px, 2.2vw, 30px);
   font-weight: 500;
   letter-spacing: -.045em;
   line-height: 1.15;
@@ -561,12 +561,8 @@ h1 em, h2 em {
   -webkit-line-clamp: 3;
 }
 
-.story-card-featured .story-image {
-  aspect-ratio: 1.4 / 1;
-}
-
 .story-card-featured .story-copy h2 {
-  font-size: clamp(34px, 4vw, 51px);
+  font-size: clamp(32px, 3.6vw, 46px);
 }
 
 .story-byline {
@@ -829,7 +825,8 @@ h1 em, h2 em {
 .reader-cover {
   display: block;
   width: 100%;
-  max-height: 500px;
+  max-width: 760px;
+  max-height: 420px;
   margin: 0 auto 44px;
   object-fit: cover;
 }
@@ -1246,6 +1243,12 @@ h1 em, h2 em {
   font-size: 14px;
 }
 
+@media (max-width: 1024px) {
+  .story-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 760px) {
   .site-shell {
     width: min(100% - 36px, 600px);
@@ -1341,12 +1344,13 @@ h1 em, h2 em {
     padding-bottom: 26px;
   }
 
-  .story-card-featured .story-image, .story-image {
-    aspect-ratio: 1.5 / 1;
+  .story-card-featured .story-copy h2 {
+    font-size: 34px;
   }
 
-  .story-card-featured .story-copy h2 {
-    font-size: 37px;
+  .reader-cover {
+    max-height: 260px;
+    margin-bottom: 32px;
   }
 
   .invitation {
